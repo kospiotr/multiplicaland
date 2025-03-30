@@ -1,8 +1,14 @@
+import { EventLog } from './types';
+
 export type QuestionPosition = 'A' | 'B' | 'C';
 
 export type RewardType = 'none' | 'fireworks' | 'funny_picture' | 'adorable_kitty';
 
 export type SessionStatsDisplay = 'none' | 'on_answer' | 'permanent';
+
+export type FosterChallengingPercentage = 0 | 25 | 50 | 75 | 100;
+
+export type FosterGapsPercentage = 0 | 25 | 50 | 75 | 100;
 
 export interface NumberRange {
   min: number;
@@ -23,6 +29,8 @@ export interface GameSettings {
     correctAnswersThreshold: number;
   };
   sessionStatsDisplay: SessionStatsDisplay;
+  fosterChallengingPercentage: FosterChallengingPercentage;
+  fosterGapsPercentage: FosterGapsPercentage;
 }
 
 export interface ToolbarProps {

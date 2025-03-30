@@ -46,6 +46,7 @@ export default function Progress() {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
     return logs.filter(log => {
+      if (log.ignored) return false;
       const logDate = new Date(log.timestamp);
       switch (period) {
         case 'session':
@@ -60,6 +61,16 @@ export default function Progress() {
           return true;
       }
     });
+  };
+
+  const toggleIgnoreLog = (logId: string) => {
+    setLogs(prevLogs => 
+      prevLogs.map(log => 
+        log.id === logId 
+          ? { ...log, ignored: !log.ignored }
+          : log
+      )
+    );
   };
 
   const calculateStats = (filteredLogs: QuestionLog[]) => {
@@ -191,20 +202,36 @@ export default function Progress() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-gray-500 text-sm font-medium">Total Questions</h3>
-            <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
+            <div className="text-2xl font-bold text-blue-600 mb-2">
+              {filterLogsByPeriod(logs, selectedPeriod).length}
+            </div>
+            <div className="text-gray-600">Total Questions</div>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-gray-500 text-sm font-medium">Correct Answers</h3>
-            <p className="text-3xl font-bold text-green-600">
-              {((stats.correct / stats.total) * 100 || 0).toFixed(1)}%
-            </p>
+            <div className="text-2xl font-bold text-green-600 mb-2">
+              {filterLogsByPeriod(logs, selectedPeriod).filter(log => log.isCorrect).length}
+            </div>
+            <div className="text-gray-600">Correct Answers</div>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-gray-500 text-sm font-medium">Average Time</h3>
-            <p className="text-3xl font-bold text-blue-600">{stats.averageTime.toFixed(1)}s</p>
+            <div className="text-2xl font-bold text-red-600 mb-2">
+              {filterLogsByPeriod(logs, selectedPeriod).filter(log => !log.isCorrect).length}
+            </div>
+            <div className="text-gray-600">Incorrect Answers</div>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="text-2xl font-bold text-purple-600 mb-2">
+              {(() => {
+                const filteredLogs = filterLogsByPeriod(logs, selectedPeriod);
+                const correct = filteredLogs.filter(log => log.isCorrect).length;
+                return filteredLogs.length > 0 
+                  ? Math.round((correct / filteredLogs.length) * 100)
+                  : 0;
+              })()}%
+            </div>
+            <div className="text-gray-600">Accuracy</div>
           </div>
         </div>
 
@@ -319,11 +346,12 @@ Average time: ${(timingHeatmapData[i]?.[j]?.averageTime || 0).toFixed(1)}s`}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {logs.slice().reverse().map((log) => (
-                  <tr key={log.id}>
+                {filterLogsByPeriod(logs, selectedPeriod).slice().reverse().map((log) => (
+                  <tr key={log.id} className={log.ignored ? 'bg-gray-50' : ''}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {log.question.a} × {log.question.b} = {log.question.answer}
                     </td>
@@ -356,6 +384,19 @@ Average time: ${(timingHeatmapData[i]?.[j]?.averageTime || 0).toFixed(1)}s`}
                       >
                         {log.sessionId ? `${log.sessionId.slice(0, 10)}...` : 'No ID'}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => toggleIgnoreLog(log.id)}
+                        className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+                          log.ignored
+                            ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                        title={log.ignored ? 'Include in statistics' : 'Exclude from statistics'}
+                      >
+                        {log.ignored ? 'Ignored' : 'Ignore'}
+                      </button>
                     </td>
                   </tr>
                 ))}

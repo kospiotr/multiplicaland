@@ -49,7 +49,13 @@ const Home = () => {
         timerEnabled: false,
         timerDuration: 0,
         selectedPositions: ['C'],
-        sessionStatsDisplay: 'none'
+        sessionStatsDisplay: 'none',
+        reward: {
+          type: 'none',
+          correctAnswersThreshold: 5
+        },
+        fosterChallengingPercentage: 25,
+        fosterGapsPercentage: 25
       };
     }
     return {
@@ -61,7 +67,13 @@ const Home = () => {
       timerEnabled: false,
       timerDuration: 0,
       selectedPositions: ['C'],
-      sessionStatsDisplay: 'none'
+      sessionStatsDisplay: 'none',
+      reward: {
+        type: 'none',
+        correctAnswersThreshold: 5
+      },
+      fosterChallengingPercentage: 25,
+      fosterGapsPercentage: 25
     };
   });
 

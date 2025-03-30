@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { GameSettings, QuestionPosition, NumberRange, RewardType } from '../types/game';
+import { GameSettings, QuestionPosition, NumberRange, RewardType, SessionStatsDisplay, FosterChallengingPercentage, FosterGapsPercentage } from '../types/game';
 import { EventLog } from '../types/types';
 
 const TIMER_OPTIONS = [
@@ -35,7 +35,9 @@ const DEFAULT_SETTINGS: GameSettings = {
     type: 'none' as const,
     correctAnswersThreshold: 5
   },
-  sessionStatsDisplay: 'none'
+  sessionStatsDisplay: 'none',
+  fosterChallengingPercentage: 25,
+  fosterGapsPercentage: 25
 };
 
 export default function Settings() {
@@ -283,6 +285,76 @@ export default function Settings() {
                     <span className="text-sm text-gray-600">correct answers</span>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Foster Challenging Questions Section */}
+            <div className="flex items-start gap-8 py-6 border-b border-gray-100">
+              <div className="w-48 pt-1">
+                <h2 className="text-lg font-semibold text-gray-800">Foster Challenging</h2>
+                <p className="text-sm text-gray-500 mt-1">Control how often to show challenging questions</p>
+              </div>
+              <div className="flex-1">
+                <div className="flex gap-2">
+                  {[0, 25, 50, 75, 100].map((percentage) => (
+                    <button
+                      key={percentage}
+                      onClick={() => handleSettingsChange({
+                        ...settings,
+                        fosterChallengingPercentage: percentage as FosterChallengingPercentage
+                      })}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        settings.fosterChallengingPercentage === percentage
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {percentage}%
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-sm text-gray-500">
+                  {settings.fosterChallengingPercentage === 0 && "No challenging questions - all questions are random"}
+                  {settings.fosterChallengingPercentage === 25 && "Low challenging - occasionally show difficult questions"}
+                  {settings.fosterChallengingPercentage === 50 && "Medium challenging - balanced mix of easy and difficult questions"}
+                  {settings.fosterChallengingPercentage === 75 && "High challenging - frequently show difficult questions"}
+                  {settings.fosterChallengingPercentage === 100 && "Maximum challenging - focus on difficult questions"}
+                </p>
+              </div>
+            </div>
+
+            {/* Foster Question Gaps Section */}
+            <div className="flex items-start gap-8 py-6 border-b border-gray-100">
+              <div className="w-48 pt-1">
+                <h2 className="text-lg font-semibold text-gray-800">Foster Gaps</h2>
+                <p className="text-sm text-gray-500 mt-1">Control how often to show questions with gaps</p>
+              </div>
+              <div className="flex-1">
+                <div className="flex gap-2">
+                  {[0, 25, 50, 75, 100].map((percentage) => (
+                    <button
+                      key={percentage}
+                      onClick={() => handleSettingsChange({
+                        ...settings,
+                        fosterGapsPercentage: percentage as FosterGapsPercentage
+                      })}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        settings.fosterGapsPercentage === percentage
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {percentage}%
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-sm text-gray-500">
+                  {settings.fosterGapsPercentage === 0 && "No gaps - questions are complete"}
+                  {settings.fosterGapsPercentage === 25 && "Low gaps - occasionally show questions with gaps"}
+                  {settings.fosterGapsPercentage === 50 && "Medium gaps - balanced mix of complete and gapped questions"}
+                  {settings.fosterGapsPercentage === 75 && "High gaps - frequently show questions with gaps"}
+                  {settings.fosterGapsPercentage === 100 && "Maximum gaps - focus on questions with gaps"}
+                </p>
               </div>
             </div>
 

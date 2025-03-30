@@ -1,3 +1,5 @@
+import { QuestionPosition } from './game';
+
 export interface QuestionLog {
   id: string;
   sessionId: string;
@@ -5,11 +7,13 @@ export interface QuestionLog {
     a: number;
     b: number;
     answer: number;
+    position: QuestionPosition;
   };
   userAnswer: number;
   isCorrect: boolean;
   timestamp: string;
   timeToAnswer: number; // in seconds
+  ignored?: boolean;
 }
 
 export interface EventLog {
