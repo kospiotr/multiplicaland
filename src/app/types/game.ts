@@ -2,6 +2,8 @@ export type QuestionPosition = 'A' | 'B' | 'C';
 
 export type RewardType = 'none' | 'fireworks' | 'funny_picture' | 'adorable_kitty';
 
+export type SessionStatsDisplay = 'none' | 'on_answer' | 'permanent';
+
 export interface NumberRange {
   min: number;
   max: number;
@@ -20,6 +22,7 @@ export interface GameSettings {
     type: RewardType;
     correctAnswersThreshold: number;
   };
+  sessionStatsDisplay: SessionStatsDisplay;
 }
 
 export interface ToolbarProps {

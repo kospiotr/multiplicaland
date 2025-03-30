@@ -6,6 +6,7 @@ import { QuestionLog } from './types/types';
 import { GameSettings, QuestionPosition } from './types/game';
 import Notification from './components/Notification';
 import Fireworks from './components/Fireworks';
+import ImageReward from './components/ImageReward';
 
 interface Question {
   a: number;
@@ -20,9 +21,11 @@ const Home = () => {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
   const [showReward, setShowReward] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const rewardTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const [sessionId] = useState(() => {
+  const statsTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const [sessionId, setSessionId] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedSessionId = localStorage.getItem('currentSessionId');
       if (savedSessionId) {
@@ -45,7 +48,8 @@ const Home = () => {
         },
         timerEnabled: false,
         timerDuration: 0,
-        selectedPositions: ['C']
+        selectedPositions: ['C'],
+        sessionStatsDisplay: 'none'
       };
     }
     return {
@@ -56,7 +60,8 @@ const Home = () => {
       },
       timerEnabled: false,
       timerDuration: 0,
-      selectedPositions: ['C']
+      selectedPositions: ['C'],
+      sessionStatsDisplay: 'none'
     };
   });
 
@@ -108,6 +113,13 @@ const Home = () => {
     setTimeLeft(settings.timerEnabled ? settings.timerDuration : null);
     setNotification(null);
     
+    // Handle stats display based on settings
+    if (settings.sessionStatsDisplay === 'permanent') {
+      setShowStats(true);
+    } else if (settings.sessionStatsDisplay === 'none') {
+      setShowStats(false);
+    }
+    
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
@@ -124,7 +136,7 @@ const Home = () => {
         }
       }, 1000);
     }
-  }, [settings.timerEnabled, settings.timerDuration, settings.selectedPositions, generateQuestion]);
+  }, [settings.timerEnabled, settings.timerDuration, settings.selectedPositions, settings.sessionStatsDisplay, generateQuestion]);
 
   const formatQuestion = (question: Question) => {
     const parts = {
@@ -209,6 +221,17 @@ const Home = () => {
 
     setLogs(prevLogs => [...prevLogs, newLog]);
 
+    // Handle stats display based on settings
+    if (settings.sessionStatsDisplay === 'on_answer') {
+      setShowStats(true);
+      if (statsTimeoutRef.current) {
+        clearTimeout(statsTimeoutRef.current);
+      }
+      statsTimeoutRef.current = setTimeout(() => {
+        setShowStats(false);
+      }, 2000);
+    }
+
     if (isCorrect) {
       setNotification({
         type: 'success',
@@ -220,7 +243,6 @@ const Home = () => {
       setConsecutiveCorrect(newConsecutiveCorrect);
       
       if (settings.reward.type !== 'none' && 
-          settings.reward.type === 'fireworks' &&
           newConsecutiveCorrect % settings.reward.correctAnswersThreshold === 0) {
         setShowReward(true);
         
@@ -263,111 +285,120 @@ const Home = () => {
     };
   }, []);
 
+  const createNewSession = () => {
+    const newSessionId = crypto.randomUUID();
+    setSessionId(newSessionId);
+    localStorage.setItem('currentSessionId', newSessionId);
+    setConsecutiveCorrect(0);
+  };
+
   return (
     <div className="max-w-4xl mx-auto h-[calc(100vh-5rem)] flex items-center justify-center relative">
       <AnimatePresence>
-        {showReward && <Fireworks />}
-        {notification && (
-          <motion.div
-            initial={{ opacity: 0, y: -100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -100 }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            className={`absolute top-4 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-lg ${
+        {showReward && settings.reward.type === 'fireworks' && <Fireworks />}
+        {showReward && settings.reward.type === 'funny_picture' && <ImageReward show={showReward} />}
+        <motion.div
+          initial={{ opacity: 0, y: -100 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -100 }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          className="absolute top-5 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4"
+        >
+          {notification && (
+            <div className={`px-6 py-3 rounded-xl shadow-lg ${
               notification.type === 'success' 
                 ? 'bg-green-500 text-white' 
                 : 'bg-red-500 text-white'
-            }`}
-          >
-            {notification.message}
-          </motion.div>
-        )}
+            }`}>
+              {notification.message}
+            </div>
+          )}
+          
+          {/* Session Stats */}
+          {showStats && (
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-3">
+              <div className="grid grid-cols-4 gap-2">
+                <div className="bg-blue-50 p-2 rounded-lg">
+                  <div className="text-xs text-blue-600 font-medium">Questions</div>
+                  <div className="text-sm font-bold text-blue-700">{logs.filter(log => log.sessionId === sessionId).length}</div>
+                </div>
+                <div className="bg-green-50 p-2 rounded-lg">
+                  <div className="text-xs text-green-600 font-medium">Accuracy</div>
+                  <div className="text-sm font-bold text-green-700">
+                    {(() => {
+                      const sessionLogs = logs.filter(log => log.sessionId === sessionId);
+                      const correct = sessionLogs.filter(log => log.isCorrect).length;
+                      return sessionLogs.length > 0 
+                        ? `${Math.round((correct / sessionLogs.length) * 100)}%`
+                        : '0%';
+                    })()}
+                  </div>
+                </div>
+                <div className="bg-orange-50 p-2 rounded-lg">
+                  <div className="text-xs text-orange-600 font-medium">Streak</div>
+                  <div className="text-sm font-bold text-orange-700">{consecutiveCorrect}</div>
+                </div>
+                <div className="bg-purple-50 p-2 rounded-lg">
+                  <div className="text-xs text-purple-600 font-medium">Avg Time</div>
+                  <div className="text-sm font-bold text-purple-700">
+                    {(() => {
+                      const sessionLogs = logs.filter(log => log.sessionId === sessionId);
+                      const avgTime = sessionLogs.reduce((acc, log) => acc + log.timeToAnswer, 0) / sessionLogs.length || 0;
+                      return `${Math.round(avgTime)}s`;
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </motion.div>
       </AnimatePresence>
 
-      {/* Session Stats */}
-      <div className="absolute top-4 right-4 grid grid-cols-4 gap-2">
-        <div className="bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg">
-          <div className="text-xs text-blue-600 font-medium">Questions</div>
-          <div className="text-sm font-bold text-blue-700">
-            {logs.filter(log => log.sessionId === sessionId).length}
-          </div>
-        </div>
-        <div className="bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg">
-          <div className="text-xs text-green-600 font-medium">Accuracy</div>
-          <div className="text-sm font-bold text-green-700">
-            {(() => {
-              const sessionLogs = logs.filter(log => log.sessionId === sessionId);
-              const correct = sessionLogs.filter(log => log.isCorrect).length;
-              return sessionLogs.length > 0 
-                ? `${((correct / sessionLogs.length) * 100).toFixed(0)}%`
-                : '0%';
-            })()}
-          </div>
-        </div>
-        <div className="bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg">
-          <div className="text-xs text-orange-600 font-medium">Streak</div>
-          <div className="text-sm font-bold text-orange-700">
-            {consecutiveCorrect}
-          </div>
-        </div>
-        <div className="bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg">
-          <div className="text-xs text-purple-600 font-medium">Avg Time</div>
-          <div className="text-sm font-bold text-purple-700">
-            {(() => {
-              const sessionLogs = logs.filter(log => log.sessionId === sessionId);
-              const avgTime = sessionLogs.reduce((acc, log) => acc + log.timeToAnswer, 0) / sessionLogs.length || 0;
-              return `${avgTime.toFixed(1)}s`;
-            })()}
-          </div>
-        </div>
-      </div>
-      
       <motion.div 
         className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-lg"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2 }}
       >
-        <form onSubmit={handleSubmit} className="space-y-6 text-center">
-          <div className="space-y-4">
-            <div className="relative">
-              <motion.h2 
-                key={`${currentQuestion.a}-${currentQuestion.b}-${currentQuestion.position}`}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-4xl font-bold text-gray-800"
-              >
-                {formatQuestion(currentQuestion)}
-              </motion.h2>
-              {timeLeft !== null && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className={`absolute -top-8 left-1/2 transform -translate-x-1/2 text-lg font-bold ${
-                    timeLeft <= 2 ? 'text-red-500' : 'text-blue-500'
-                  }`}
-                >
-                  {timeLeft}s
-                </motion.div>
-              )}
+        {/* Question Display */}
+        <div className="text-4xl font-bold text-center mb-8">
+          {formatQuestion(currentQuestion)}
+        </div>
+
+        {/* Answer Input */}
+        <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
+          <input
+            type="number"
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            className="w-32 h-12 text-2xl text-center border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="?"
+            autoFocus
+          />
+          {timeLeft !== null && (
+            <div className="text-lg font-medium text-gray-600">
+              Time left: {timeLeft}s
             </div>
-            <input
-              type="number"
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              className="text-center text-3xl w-32 p-4 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-              placeholder="?"
-              autoFocus
-            />
-          </div>
-          <button 
+          )}
+          <button
             type="submit"
-            className="w-full p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xl font-bold rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105"
+            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             Submit
           </button>
         </form>
       </motion.div>
+
+      {/* Floating New Session Button */}
+      <button
+        onClick={createNewSession}
+        className="fixed bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 shadow-lg transition-all duration-200 hover:scale-110"
+        title="Start a new session"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
     </div>
   );
 }

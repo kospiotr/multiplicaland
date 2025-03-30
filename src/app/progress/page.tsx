@@ -318,6 +318,7 @@ Average time: ${(timingHeatmapData[i]?.[j]?.averageTime || 0).toFixed(1)}s`}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -343,6 +344,18 @@ Average time: ${(timingHeatmapData[i]?.[j]?.averageTime || 0).toFixed(1)}s`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {new Date(log.timestamp).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span 
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          log.sessionId && currentSessionId && log.sessionId === currentSessionId
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}
+                        title={`Full Session ID: ${log.sessionId || 'No session ID'}`}
+                      >
+                        {log.sessionId ? `${log.sessionId.slice(0, 10)}...` : 'No ID'}
+                      </span>
                     </td>
                   </tr>
                 ))}

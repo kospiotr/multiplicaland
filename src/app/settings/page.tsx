@@ -4,7 +4,16 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { GameSettings, QuestionPosition, NumberRange, RewardType } from '../types/game';
 import { EventLog } from '../types/types';
-import Toolbar from '../components/Toolbar';
+
+const TIMER_OPTIONS = [
+  { value: 0, label: 'Off' },
+  { value: 1, label: '1s' },
+  { value: 2, label: '2s' },
+  { value: 3, label: '3s' },
+  { value: 5, label: '5s' },
+  { value: 8, label: '8s' },
+  { value: 10, label: '10s' },
+] as const;
 
 const REWARD_OPTIONS: { value: RewardType; label: string; icon: string }[] = [
   { value: 'none', label: 'No Reward', icon: 'M6 18L18 6M6 6l12 12' },
@@ -25,7 +34,8 @@ const DEFAULT_SETTINGS: GameSettings = {
   reward: {
     type: 'none' as const,
     correctAnswersThreshold: 5
-  }
+  },
+  sessionStatsDisplay: 'none'
 };
 
 export default function Settings() {
@@ -53,9 +63,51 @@ export default function Settings() {
     localStorage.setItem('gameSettings', JSON.stringify(newSettings));
   };
 
-  const handleLogChange = (log: EventLog) => {
-    // Handle settings change logs if needed
-    console.log('Settings change logged:', log);
+  const toggleTimer = (duration: number) => {
+    handleSettingsChange({
+      ...settings,
+      timerEnabled: duration > 0,
+      timerDuration: duration
+    });
+  };
+
+  const togglePosition = (position: QuestionPosition) => {
+    const newPositions = settings.selectedPositions.includes(position)
+      ? settings.selectedPositions.filter(p => p !== position)
+      : [...settings.selectedPositions, position];
+    
+    if (newPositions.length === 0) return;
+
+    handleSettingsChange({
+      ...settings,
+      selectedPositions: newPositions
+    });
+  };
+
+  const updateRange = (factor: 'A' | 'B' | 'C', field: keyof NumberRange, value: string) => {
+    const numValue = parseInt(value) || 0;
+    const currentRange = settings.ranges[factor];
+    let newRange: NumberRange;
+
+    if (field === 'min') {
+      newRange = {
+        min: Math.min(numValue, currentRange.max),
+        max: currentRange.max
+      };
+    } else {
+      newRange = {
+        min: currentRange.min,
+        max: Math.max(numValue, currentRange.min)
+      };
+    }
+
+    handleSettingsChange({
+      ...settings,
+      ranges: {
+        ...settings.ranges,
+        [factor]: newRange
+      }
+    });
   };
 
   const updateReward = (type: RewardType) => {
@@ -78,7 +130,7 @@ export default function Settings() {
       }
     });
   };
-console.log('settings', settings)
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
@@ -90,26 +142,126 @@ console.log('settings', settings)
           className="bg-white rounded-xl shadow-lg overflow-hidden"
         >
           <div className="p-6">
-            <Toolbar
-              settings={settings}
-              onSettingsChange={handleSettingsChange}
-              onLogChange={handleLogChange}
-            />
+            {/* Number Ranges Section */}
+            <div className="flex items-start gap-8 py-6 border-b border-gray-100">
+              <div className="w-48 pt-1">
+                <h2 className="text-lg font-semibold text-gray-800">Number Ranges</h2>
+                <p className="text-sm text-gray-500 mt-1">Set the range for each factor</p>
+              </div>
+              <div className="flex-1">
+                <div className="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+                  {(['A', 'B', 'C'] as const).map((factor) => (
+                    <div key={factor} className="flex flex-col items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700">{factor}</span>
+                      <div className="flex gap-2">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-xs text-gray-500">Min</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={settings.ranges[factor].min}
+                            onChange={(e) => updateRange(factor, 'min', e.target.value)}
+                            className="w-16 h-9 text-sm text-center border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            title={`Minimum value for ${factor}`}
+                          />
+                        </div>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-xs text-gray-500">Max</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={settings.ranges[factor].max}
+                            onChange={(e) => updateRange(factor, 'max', e.target.value)}
+                            className="w-16 h-9 text-sm text-center border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            title={`Maximum value for ${factor}`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Timer Section */}
+            <div className="flex items-start gap-8 py-6 border-b border-gray-100">
+              <div className="w-48 pt-1">
+                <h2 className="text-lg font-semibold text-gray-800">Timer</h2>
+                <p className="text-sm text-gray-500 mt-1">Set time limit for answers</p>
+              </div>
+              <div className="flex-1">
+                <div className="flex gap-2 bg-gray-50 p-2 rounded-lg">
+                  {TIMER_OPTIONS.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => toggleTimer(value)}
+                      className={`p-3 rounded-lg transition-all ${
+                        (value === 0 && !settings.timerEnabled) || (settings.timerEnabled && settings.timerDuration === value)
+                          ? 'bg-blue-100 text-blue-600'
+                          : 'bg-white text-gray-600'
+                      } hover:bg-blue-50 font-medium text-sm min-w-[40px]`}
+                      title={`Set timer to ${label}`}
+                    >
+                      {value === 0 ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                      ) : (
+                        <div className="w-5 h-5 flex items-center justify-center">
+                          {value}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Question Position Section */}
+            <div className="flex items-start gap-8 py-6 border-b border-gray-100">
+              <div className="w-48 pt-1">
+                <h2 className="text-lg font-semibold text-gray-800">Question Position</h2>
+                <p className="text-sm text-gray-500 mt-1">Select where the question mark appears</p>
+              </div>
+              <div className="flex-1">
+                <div className="flex gap-2 bg-gray-50 p-2 rounded-lg">
+                  {(['A', 'B', 'C'] as const).map((position) => (
+                    <button
+                      key={position}
+                      onClick={() => togglePosition(position)}
+                      className={`p-3 rounded-lg transition-all ${
+                        settings.selectedPositions.includes(position)
+                          ? 'bg-blue-100 text-blue-600'
+                          : 'bg-white text-gray-600'
+                      } hover:bg-blue-50 font-medium text-sm min-w-[40px]`}
+                      title={`${settings.selectedPositions.includes(position) ? 'Remove' : 'Add'} position ${position}`}
+                    >
+                      {position}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {/* Reward Section */}
-            <div className="mt-8 pt-8 border-t border-gray-100">
-              <div className="flex flex-col items-center">
-                <span className="text-xs text-gray-500 mb-1">Rewards</span>
-                <div className="flex gap-1 bg-gray-50 p-1 rounded-lg">
+            <div className="flex items-start gap-8 py-6 border-b border-gray-100">
+              <div className="w-48 pt-1">
+                <h2 className="text-lg font-semibold text-gray-800">Rewards</h2>
+                <p className="text-sm text-gray-500 mt-1">Choose your reward type</p>
+              </div>
+              <div className="flex-1">
+                <div className="flex gap-2 bg-gray-50 p-2 rounded-lg">
                   {REWARD_OPTIONS.map(({ value, label, icon }) => (
                     <button
                       key={value}
                       onClick={() => updateReward(value)}
-                      className={`p-2 rounded-lg transition-all ${
+                      className={`p-3 rounded-lg transition-all ${
                         settings.reward.type === value
                           ? 'bg-blue-100 text-blue-600'
                           : 'bg-white text-gray-600'
-                      } hover:bg-blue-50 font-medium text-sm min-w-[32px]`}
+                      } hover:bg-blue-50 font-medium text-sm min-w-[40px]`}
                       title={label}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -119,18 +271,63 @@ console.log('settings', settings)
                   ))}
                 </div>
                 {settings.reward.type !== 'none' && (
-                  <div className="mt-4 flex items-center gap-2">
+                  <div className="mt-4 flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
                     <span className="text-sm text-gray-600">Show reward after</span>
                     <input
                       type="number"
                       min="1"
                       value={settings.reward.correctAnswersThreshold}
                       onChange={(e) => updateThreshold(e.target.value)}
-                      className="w-16 h-8 text-sm text-center border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-16 h-9 text-sm text-center border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-600">correct answers</span>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Session Stats Display Section */}
+            <div className="flex items-start gap-8 py-6">
+              <div className="w-48 pt-1">
+                <h2 className="text-lg font-semibold text-gray-800">Session Stats</h2>
+                <p className="text-sm text-gray-500 mt-1">Choose when to show statistics</p>
+              </div>
+              <div className="flex-1">
+                <div className="flex gap-2 bg-gray-50 p-2 rounded-lg">
+                  <button
+                    onClick={() => handleSettingsChange({ ...settings, sessionStatsDisplay: 'none' })}
+                    className={`p-3 rounded-lg transition-all ${
+                      settings.sessionStatsDisplay === 'none'
+                        ? 'bg-blue-100 text-blue-600'
+                        : 'bg-white text-gray-600'
+                    } hover:bg-blue-50 font-medium text-sm min-w-[120px]`}
+                    title="Hide statistics"
+                  >
+                    None
+                  </button>
+                  <button
+                    onClick={() => handleSettingsChange({ ...settings, sessionStatsDisplay: 'on_answer' })}
+                    className={`p-3 rounded-lg transition-all ${
+                      settings.sessionStatsDisplay === 'on_answer'
+                        ? 'bg-blue-100 text-blue-600'
+                        : 'bg-white text-gray-600'
+                    } hover:bg-blue-50 font-medium text-sm min-w-[120px]`}
+                    title="Show statistics after each answer"
+                  >
+                    On Answer
+                  </button>
+                  <button
+                    onClick={() => handleSettingsChange({ ...settings, sessionStatsDisplay: 'permanent' })}
+                    className={`p-3 rounded-lg transition-all ${
+                      settings.sessionStatsDisplay === 'permanent'
+                        ? 'bg-blue-100 text-blue-600'
+                        : 'bg-white text-gray-600'
+                    } hover:bg-blue-50 font-medium text-sm min-w-[120px]`}
+                    title="Always show statistics"
+                  >
+                    Permanent
+                  </button>
+                </div>
               </div>
             </div>
           </div>
