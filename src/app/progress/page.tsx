@@ -235,6 +235,7 @@ export default function Progress() {
           </div>
         </div>
 
+<div className="grid grid-cols-2 gap-4">
         {/* Accuracy Heatmap */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <h2 className="text-2xl font-bold p-6 border-b bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
@@ -332,7 +333,7 @@ Average time: ${(timingHeatmapData[i]?.[j]?.averageTime || 0).toFixed(1)}s`}
             </div>
           </div>
         </div>
-
+        </div>
         {/* Question History */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <h2 className="text-2xl font-bold p-6 border-b bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">Question History</h2>
@@ -374,16 +375,23 @@ Average time: ${(timingHeatmapData[i]?.[j]?.averageTime || 0).toFixed(1)}s`}
                       {new Date(log.timestamp).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span 
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      <button
+                        onClick={() => {
+                          if (log.sessionId) {
+                            setCurrentSessionId(log.sessionId);
+                            localStorage.setItem('currentSessionId', log.sessionId);
+                            setSelectedPeriod('session'); // Switch to session view
+                          }
+                        }}
+                        className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
                           log.sessionId && currentSessionId && log.sessionId === currentSessionId
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-gray-100 text-gray-700'
+                            ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
-                        title={`Full Session ID: ${log.sessionId || 'No session ID'}`}
+                        title={`Full Session ID: ${log.sessionId || 'No session ID'}\nClick to switch to this session`}
                       >
                         {log.sessionId ? `${log.sessionId.slice(0, 10)}...` : 'No ID'}
-                      </span>
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
@@ -402,6 +410,69 @@ Average time: ${(timingHeatmapData[i]?.[j]?.averageTime || 0).toFixed(1)}s`}
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Import/Export Section */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+            Data Management
+          </h2>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={() => {
+                const logsData = JSON.stringify(logs, null, 2);
+                const blob = new Blob([logsData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `question-logs-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              Export Question Logs
+            </button>
+            <label className="flex-1">
+              <input
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      try {
+                        const importedLogs = JSON.parse(event.target?.result as string);
+                        if (Array.isArray(importedLogs)) {
+                          setLogs(importedLogs);
+                          localStorage.setItem('questionLogs', JSON.stringify(importedLogs));
+                          alert('Question logs imported successfully!');
+                        } else {
+                          throw new Error('Invalid log format');
+                        }
+                      } catch (error) {
+                        alert('Error importing logs. Please make sure the file is in the correct format.');
+                      }
+                    };
+                    reader.readAsText(file);
+                  }
+                }}
+              />
+              <div className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                Import Question Logs
+              </div>
+            </label>
           </div>
         </div>
       </motion.div>

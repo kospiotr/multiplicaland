@@ -77,7 +77,7 @@ const Home = () => {
     };
   });
 
-  const generateQuestion = useCallback((position: QuestionPosition = 'C') => {
+  const generateRandom = useCallback((position: QuestionPosition = 'C') => {
     const generateInRange = (min: number, max: number) => 
       Math.floor(Math.random() * (max - min + 1)) + min;
 
@@ -88,7 +88,7 @@ const Home = () => {
 
     // If the product is outside C's range, regenerate
     if (product < settings.ranges.C.min || product > settings.ranges.C.max) {
-      return generateQuestion(position); // Try again
+      return generateRandom(position); // Try again
     }
 
     return { 
@@ -98,6 +98,88 @@ const Home = () => {
       position
     };
   }, [settings.ranges]);
+
+  const generateChallenging = useCallback((position: QuestionPosition = 'C') => {
+    const generateInRange = (min: number, max: number) => 
+      Math.floor(Math.random() * (max - min + 1)) + min;
+
+    // Generate larger numbers for more challenging questions
+    const a = generateInRange(
+      Math.max(settings.ranges.A.min, 5),
+      settings.ranges.A.max
+    );
+    const b = generateInRange(
+      Math.max(settings.ranges.B.min, 5),
+      settings.ranges.B.max
+    );
+    const product = a * b;
+
+    // If the product is outside C's range, regenerate
+    if (product < settings.ranges.C.min || product > settings.ranges.C.max) {
+      return generateChallenging(position); // Try again
+    }
+
+    return { 
+      a, 
+      b, 
+      answer: product,
+      position
+    };
+  }, [settings.ranges]);
+
+  const generateGaps = useCallback((position: QuestionPosition = 'C') => {
+    const generateInRange = (min: number, max: number) => 
+      Math.floor(Math.random() * (max - min + 1)) + min;
+
+    // Generate numbers that create interesting gaps
+    const a = generateInRange(settings.ranges.A.min, settings.ranges.A.max);
+    const b = generateInRange(settings.ranges.B.min, settings.ranges.B.max);
+    const product = a * b;
+
+    // If the product is outside C's range, regenerate
+    if (product < settings.ranges.C.min || product > settings.ranges.C.max) {
+      return generateGaps(position); // Try again
+    }
+
+    // For gaps, we want to ensure the position is not 'C'
+    // This ensures we're always showing a gap in the equation
+    const finalPosition = position === 'C' ? 'A' : position;
+
+    return { 
+      a, 
+      b, 
+      answer: product,
+      position: finalPosition
+    };
+  }, [settings.ranges]);
+
+  const generateQuestion = useCallback((position: QuestionPosition = 'C') => {
+    // Calculate probabilities based on settings
+    const challengingProbability = settings.fosterChallengingPercentage / 100;
+    const gapsProbability = settings.fosterGapsPercentage / 100;
+    
+    // Generate a random number between 0 and 1
+    
+    let out = undefined;
+    // First try challenging questions based on probability
+    if (Math.random() < challengingProbability) {
+      out = generateChallenging(position);
+    }
+    if(out){
+      return out;
+    }
+    
+    // Then try gaps based on probability
+    if (Math.random() < gapsProbability) {
+      out = generateGaps(position);
+    }
+    if(out){
+      return out;
+    }
+    
+    // Fallback to random question
+    return generateRandom(position);
+  }, [settings.fosterChallengingPercentage, settings.fosterGapsPercentage, generateChallenging, generateGaps, generateRandom]);
 
   const [currentQuestion, setCurrentQuestion] = useState<Question>(() => generateQuestion('C'));
 
@@ -119,7 +201,8 @@ const Home = () => {
   }, [logs]);
 
   const startNewQuestion = useCallback(() => {
-    const newQuestion = generateQuestion(settings.selectedPositions[Math.floor(Math.random() * settings.selectedPositions.length)]);
+    const position = settings.selectedPositions[Math.floor(Math.random() * settings.selectedPositions.length)]
+    const newQuestion = generateQuestion(position);
     setCurrentQuestion(newQuestion);
     setQuestionStartTime(new Date());
     setTimeLeft(settings.timerEnabled ? settings.timerDuration : null);

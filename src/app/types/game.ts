@@ -10,6 +10,8 @@ export type FosterChallengingPercentage = 0 | 25 | 50 | 75 | 100;
 
 export type FosterGapsPercentage = 0 | 25 | 50 | 75 | 100;
 
+export type TimerDuration = 5 | 10 | 15 | 20 | 25 | 30 | 60;
+
 export interface NumberRange {
   min: number;
   max: number;

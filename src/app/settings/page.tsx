@@ -7,12 +7,13 @@ import { EventLog } from '../types/types';
 
 const TIMER_OPTIONS = [
   { value: 0, label: 'Off' },
-  { value: 1, label: '1s' },
-  { value: 2, label: '2s' },
-  { value: 3, label: '3s' },
   { value: 5, label: '5s' },
-  { value: 8, label: '8s' },
   { value: 10, label: '10s' },
+  { value: 15, label: '15s' },
+  { value: 20, label: '20s' },
+  { value: 25, label: '25s' },
+  { value: 30, label: '30s' },
+  { value: 60, label: '60s' },
 ] as const;
 
 const REWARD_OPTIONS: { value: RewardType; label: string; icon: string }[] = [
