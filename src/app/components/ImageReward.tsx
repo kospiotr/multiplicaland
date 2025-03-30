@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 const funnyImages = [
   '/rewards/math-meme-1.jpg',
@@ -32,10 +33,12 @@ const ImageReward = ({ show }: ImageRewardProps) => {
             exit={{ y: 50, opacity: 0 }}
             className="bg-white rounded-xl shadow-2xl p-4 max-w-md mx-4"
           >
-            <img 
-              src={selectedImage} 
-              alt="Reward meme" 
-              className="w-full h-auto rounded-lg"
+            <Image
+              src={selectedImage}
+              alt="Reward meme"
+              width={300}
+              height={300}
+              className="w-full h-auto rounded-lg shadow-lg"
               style={{ maxHeight: '60vh' }}
             />
           </motion.div>

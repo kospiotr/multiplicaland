@@ -1,5 +1,3 @@
-import { EventLog } from './types';
-
 export type QuestionPosition = 'A' | 'B' | 'C';
 
 export type RewardType = 'none' | 'fireworks' | 'funny_picture' | 'adorable_kitty';
@@ -35,8 +33,9 @@ export interface GameSettings {
   fosterGapsPercentage: FosterGapsPercentage;
 }
 
-export interface ToolbarProps {
-  settings: GameSettings;
-  onSettingsChange: (settings: GameSettings) => void;
-  onLogChange?: (log: EventLog) => void;
+export interface Question {
+  a: number;
+  b: number;
+  answer: number;
+  position: QuestionPosition;
 } 
