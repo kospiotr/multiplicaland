@@ -5,6 +5,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { QuestionLog } from './types/types';
 import { GameSettings, QuestionPosition } from './types/game';
 import Notification from './components/Notification';
+import Fireworks from './components/Fireworks';
 
 interface Question {
   a: number;
@@ -17,7 +18,22 @@ const Home = () => {
   const [answer, setAnswer] = useState('');
   const [questionStartTime, setQuestionStartTime] = useState<Date>(new Date());
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
+  const [showReward, setShowReward] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const rewardTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const [sessionId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedSessionId = localStorage.getItem('currentSessionId');
+      if (savedSessionId) {
+        return savedSessionId;
+      }
+      const newSessionId = crypto.randomUUID();
+      localStorage.setItem('currentSessionId', newSessionId);
+      return newSessionId;
+    }
+    return crypto.randomUUID();
+  });
   const [settings, setSettings] = useState<GameSettings>(() => {
     if (typeof window !== 'undefined') {
       const savedSettings = localStorage.getItem('gameSettings');
@@ -148,6 +164,7 @@ const Home = () => {
   const handleTimeout = () => {
     const newLog: QuestionLog = {
       id: crypto.randomUUID(),
+      sessionId,
       question: currentQuestion,
       userAnswer: -1,
       isCorrect: false,
@@ -182,6 +199,7 @@ const Home = () => {
 
     const newLog: QuestionLog = {
       id: crypto.randomUUID(),
+      sessionId,
       question: currentQuestion,
       userAnswer,
       isCorrect,
@@ -196,11 +214,32 @@ const Home = () => {
         type: 'success',
         message: 'Correct! Well done! 🎉'
       });
+      
+      // Handle consecutive correct answers and rewards
+      const newConsecutiveCorrect = consecutiveCorrect + 1;
+      setConsecutiveCorrect(newConsecutiveCorrect);
+      
+      if (settings.reward.type !== 'none' && 
+          settings.reward.type === 'fireworks' &&
+          newConsecutiveCorrect % settings.reward.correctAnswersThreshold === 0) {
+        setShowReward(true);
+        
+        // Clear any existing reward timeout
+        if (rewardTimeoutRef.current) {
+          clearTimeout(rewardTimeoutRef.current);
+        }
+        
+        // Hide reward after animation
+        rewardTimeoutRef.current = setTimeout(() => {
+          setShowReward(false);
+        }, 3000);
+      }
     } else {
       setNotification({
         type: 'error',
         message: `Incorrect. The correct answer is ${correctAnswer}`
       });
+      setConsecutiveCorrect(0);
     }
 
     setAnswer('');
@@ -227,6 +266,7 @@ const Home = () => {
   return (
     <div className="max-w-4xl mx-auto h-[calc(100vh-5rem)] flex items-center justify-center relative">
       <AnimatePresence>
+        {showReward && <Fireworks />}
         {notification && (
           <motion.div
             initial={{ opacity: 0, y: -100 }}
@@ -243,6 +283,44 @@ const Home = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Session Stats */}
+      <div className="absolute top-4 right-4 grid grid-cols-4 gap-2">
+        <div className="bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+          <div className="text-xs text-blue-600 font-medium">Questions</div>
+          <div className="text-sm font-bold text-blue-700">
+            {logs.filter(log => log.sessionId === sessionId).length}
+          </div>
+        </div>
+        <div className="bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+          <div className="text-xs text-green-600 font-medium">Accuracy</div>
+          <div className="text-sm font-bold text-green-700">
+            {(() => {
+              const sessionLogs = logs.filter(log => log.sessionId === sessionId);
+              const correct = sessionLogs.filter(log => log.isCorrect).length;
+              return sessionLogs.length > 0 
+                ? `${((correct / sessionLogs.length) * 100).toFixed(0)}%`
+                : '0%';
+            })()}
+          </div>
+        </div>
+        <div className="bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+          <div className="text-xs text-orange-600 font-medium">Streak</div>
+          <div className="text-sm font-bold text-orange-700">
+            {consecutiveCorrect}
+          </div>
+        </div>
+        <div className="bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+          <div className="text-xs text-purple-600 font-medium">Avg Time</div>
+          <div className="text-sm font-bold text-purple-700">
+            {(() => {
+              const sessionLogs = logs.filter(log => log.sessionId === sessionId);
+              const avgTime = sessionLogs.reduce((acc, log) => acc + log.timeToAnswer, 0) / sessionLogs.length || 0;
+              return `${avgTime.toFixed(1)}s`;
+            })()}
+          </div>
+        </div>
+      </div>
       
       <motion.div 
         className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-lg"
