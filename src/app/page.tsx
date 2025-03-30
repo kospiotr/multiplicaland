@@ -123,7 +123,7 @@ export default function Home() {
       acc[key].count++;
       return acc;
     }, {} as Record<string, { a: number; b: number; count: number }>);
-
+    console.log('incorrectCounts', incorrectCounts)
     // Get top 5 most frequently incorrect questions
     const topIncorrect = Object.values(incorrectCounts)
       .sort((a, b) => b.count - a.count)
@@ -152,30 +152,64 @@ export default function Home() {
   }, [logs, settings.ranges, sessionId]);
 
   const generateGaps = useCallback((position: QuestionPosition = 'C') => {
-    const generateInRange = (min: number, max: number) => 
-      Math.floor(Math.random() * (max - min + 1)) + min;
+    // Get all answers from the current session
+    const sessionAnswers = logs
+      .filter(log => log.sessionId === sessionId && !log.ignored)
+      .map(log => ({
+        a: log.question.a,
+        b: log.question.b,
+        product: log.question.a * log.question.b
+      }));
 
-    // Generate numbers that create interesting gaps
-    const a = generateInRange(settings.ranges.A.min, settings.ranges.A.max);
-    const b = generateInRange(settings.ranges.B.min, settings.ranges.B.max);
-    const product = a * b;
-
-    // If the product is outside C's range, regenerate
-    if (product < settings.ranges.C.min || product > settings.ranges.C.max) {
-      return generateGaps(position); // Try again
+    // Create a set of all possible products within the ranges
+    const possibleProducts = new Set<number>();
+    for (let a = settings.ranges.A.min; a <= settings.ranges.A.max; a++) {
+      for (let b = settings.ranges.B.min; b <= settings.ranges.B.max; b++) {
+        const product = a * b;
+        if (product >= settings.ranges.C.min && product <= settings.ranges.C.max) {
+          possibleProducts.add(product);
+        }
+      }
     }
+
+    // Create a set of products that have been answered
+    const answeredProducts = new Set(sessionAnswers.map(answer => answer.product));
+
+    // Find gaps (products that haven't been answered)
+    const gaps = Array.from(possibleProducts).filter(product => !answeredProducts.has(product));
+
+    // If no gaps found, return undefined
+    if (gaps.length === 0) {
+      return undefined;
+    }
+
+    // Randomly select a gap
+    const selectedProduct = gaps[Math.floor(Math.random() * gaps.length)];
+
+    // Find all factor pairs for the selected product
+    const factorPairs: { a: number; b: number }[] = [];
+    for (let a = settings.ranges.A.min; a <= settings.ranges.A.max; a++) {
+      for (let b = settings.ranges.B.min; b <= settings.ranges.B.max; b++) {
+        if (a * b === selectedProduct) {
+          factorPairs.push({ a, b });
+        }
+      }
+    }
+
+    // Randomly select a factor pair
+    const selectedPair = factorPairs[Math.floor(Math.random() * factorPairs.length)];
 
     // For gaps, we want to ensure the position is not 'C'
     // This ensures we're always showing a gap in the equation
     const finalPosition = position === 'C' ? 'A' : position;
 
     return { 
-      a, 
-      b, 
-      answer: product,
+      a: selectedPair.a, 
+      b: selectedPair.b, 
+      answer: selectedProduct,
       position: finalPosition
     };
-  }, [settings.ranges]);
+  }, [logs, settings.ranges, sessionId]);
 
   const generateQuestion = useCallback((position: QuestionPosition = 'C') => {
     // Calculate probabilities based on settings
@@ -195,7 +229,10 @@ export default function Home() {
     
     // Then try gaps based on probability
     if (random < gapsProbability) {
-      return generateGaps(position);
+      const gapsQuestion = generateGaps(position);
+      if (gapsQuestion) {
+        return gapsQuestion;
+      }
     }
     
     // Fallback to random question
