@@ -15,7 +15,25 @@ interface Question {
   position: QuestionPosition;
 }
 
-const Home = () => {
+const DEFAULT_SETTINGS: GameSettings = {
+  ranges: {
+    A: { min: 1, max: 10 },
+    B: { min: 1, max: 10 },
+    C: { min: 1, max: 100 }
+  },
+  timerEnabled: false,
+  timerDuration: 0,
+  selectedPositions: ['C'],
+  sessionStatsDisplay: 'none',
+  reward: {
+    type: 'none',
+    correctAnswersThreshold: 5
+  },
+  fosterChallengingPercentage: 25,
+  fosterGapsPercentage: 25
+};
+
+export default function Home() {
   const [answer, setAnswer] = useState('');
   const [questionStartTime, setQuestionStartTime] = useState<Date>(new Date());
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -25,7 +43,7 @@ const Home = () => {
   const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const rewardTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const statsTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const [sessionId, setSessionId] = useState(() => {
+  const [sessionId, setSessionId] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const savedSessionId = localStorage.getItem('currentSessionId');
       if (savedSessionId) {
@@ -40,41 +58,28 @@ const Home = () => {
   const [settings, setSettings] = useState<GameSettings>(() => {
     if (typeof window !== 'undefined') {
       const savedSettings = localStorage.getItem('gameSettings');
-      return savedSettings ? JSON.parse(savedSettings) : {
-        ranges: {
-          A: { min: 1, max: 10 },
-          B: { min: 1, max: 10 },
-          C: { min: 1, max: 100 }
-        },
-        timerEnabled: false,
-        timerDuration: 0,
-        selectedPositions: ['C'],
-        sessionStatsDisplay: 'none',
-        reward: {
-          type: 'none',
-          correctAnswersThreshold: 5
-        },
-        fosterChallengingPercentage: 25,
-        fosterGapsPercentage: 25
-      };
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
+        return {
+          ...DEFAULT_SETTINGS,
+          ...parsedSettings,
+          reward: {
+            ...DEFAULT_SETTINGS.reward,
+            ...(parsedSettings.reward || {})
+          }
+        };
+      }
+      return DEFAULT_SETTINGS;
     }
-    return {
-      ranges: {
-        A: { min: 1, max: 10 },
-        B: { min: 1, max: 10 },
-        C: { min: 1, max: 100 }
-      },
-      timerEnabled: false,
-      timerDuration: 0,
-      selectedPositions: ['C'],
-      sessionStatsDisplay: 'none',
-      reward: {
-        type: 'none',
-        correctAnswersThreshold: 5
-      },
-      fosterChallengingPercentage: 25,
-      fosterGapsPercentage: 25
-    };
+    return DEFAULT_SETTINGS;
+  });
+
+  const [logs, setLogs] = useState<QuestionLog[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedLogs = localStorage.getItem('questionLogs');
+      return savedLogs ? JSON.parse(savedLogs) : [];
+    }
+    return [];
   });
 
   const generateRandom = useCallback((position: QuestionPosition = 'C') => {
@@ -100,32 +105,51 @@ const Home = () => {
   }, [settings.ranges]);
 
   const generateChallenging = useCallback((position: QuestionPosition = 'C') => {
-    const generateInRange = (min: number, max: number) => 
-      Math.floor(Math.random() * (max - min + 1)) + min;
+    // Get all incorrect answers from the current session only
+    const incorrectAnswers = logs
+      .filter(log => !log.isCorrect && !log.ignored && log.sessionId === sessionId)
+      .map(log => ({
+        a: log.question.a,
+        b: log.question.b,
+        count: 1
+      }));
 
-    // Generate larger numbers for more challenging questions
-    const a = generateInRange(
-      Math.max(settings.ranges.A.min, 5),
-      settings.ranges.A.max
-    );
-    const b = generateInRange(
-      Math.max(settings.ranges.B.min, 5),
-      settings.ranges.B.max
-    );
-    const product = a * b;
+    // Group by question and count occurrences
+    const incorrectCounts = incorrectAnswers.reduce((acc, curr) => {
+      const key = `${curr.a}-${curr.b}`;
+      if (!acc[key]) {
+        acc[key] = { ...curr, count: 0 };
+      }
+      acc[key].count++;
+      return acc;
+    }, {} as Record<string, { a: number; b: number; count: number }>);
 
-    // If the product is outside C's range, regenerate
+    // Get top 5 most frequently incorrect questions
+    const topIncorrect = Object.values(incorrectCounts)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    // If no incorrect questions found, return undefined
+    if (topIncorrect.length === 0) {
+      return undefined;
+    }
+
+    // Randomly select one of the top incorrect questions
+    const selected = topIncorrect[Math.floor(Math.random() * topIncorrect.length)];
+    const product = selected.a * selected.b;
+
+    // If the product is outside C's range, return undefined
     if (product < settings.ranges.C.min || product > settings.ranges.C.max) {
-      return generateChallenging(position); // Try again
+      return undefined;
     }
 
     return { 
-      a, 
-      b, 
+      a: selected.a, 
+      b: selected.b, 
       answer: product,
       position
     };
-  }, [settings.ranges]);
+  }, [logs, settings.ranges, sessionId]);
 
   const generateGaps = useCallback((position: QuestionPosition = 'C') => {
     const generateInRange = (min: number, max: number) => 
@@ -159,22 +183,19 @@ const Home = () => {
     const gapsProbability = settings.fosterGapsPercentage / 100;
     
     // Generate a random number between 0 and 1
-    
-    let out = undefined;
+    const random = Math.random();
+
     // First try challenging questions based on probability
-    if (Math.random() < challengingProbability) {
-      out = generateChallenging(position);
-    }
-    if(out){
-      return out;
+    if (random < challengingProbability) {
+      const challengingQuestion = generateChallenging(position);
+      if (challengingQuestion) {
+        return challengingQuestion;
+      }
     }
     
     // Then try gaps based on probability
-    if (Math.random() < gapsProbability) {
-      out = generateGaps(position);
-    }
-    if(out){
-      return out;
+    if (random < gapsProbability) {
+      return generateGaps(position);
     }
     
     // Fallback to random question
@@ -182,14 +203,6 @@ const Home = () => {
   }, [settings.fosterChallengingPercentage, settings.fosterGapsPercentage, generateChallenging, generateGaps, generateRandom]);
 
   const [currentQuestion, setCurrentQuestion] = useState<Question>(() => generateQuestion('C'));
-
-  const [logs, setLogs] = useState<QuestionLog[]>(() => {
-    if (typeof window !== 'undefined') {
-      const savedLogs = localStorage.getItem('questionLogs');
-      return savedLogs ? JSON.parse(savedLogs) : [];
-    }
-    return [];
-  });
 
   const [notification, setNotification] = useState<{
     type: 'success' | 'error';
@@ -201,6 +214,7 @@ const Home = () => {
   }, [logs]);
 
   const startNewQuestion = useCallback(() => {
+    console.log('starting new question')
     const position = settings.selectedPositions[Math.floor(Math.random() * settings.selectedPositions.length)]
     const newQuestion = generateQuestion(position);
     setCurrentQuestion(newQuestion);
@@ -287,7 +301,7 @@ const Home = () => {
     setAnswer('');
 
     setTimeout(() => {
-      startNewQuestion();
+      //startNewQuestion();
     }, 2000);
   };
 
@@ -366,10 +380,6 @@ const Home = () => {
     }, 2000);
   };
 
-  // Initialize first question
-  useEffect(() => {
-    startNewQuestion();
-  }, [startNewQuestion]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -497,6 +507,4 @@ const Home = () => {
     </div>
   );
 }
-
-export default Home;
 
