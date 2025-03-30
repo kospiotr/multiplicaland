@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { QuestionLog } from './types/types';
 import { GameSettings, QuestionPosition } from './types/game';
-import Toolbar from './components/Toolbar';
+import Notification from './components/Notification';
 
 interface Question {
   a: number;
@@ -18,15 +18,30 @@ const Home = () => {
   const [questionStartTime, setQuestionStartTime] = useState<Date>(new Date());
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const [settings, setSettings] = useState<GameSettings>({
-    ranges: {
-      A: { min: 1, max: 10 },
-      B: { min: 1, max: 10 },
-      C: { min: 1, max: 100 }
-    },
-    timerEnabled: false,
-    timerDuration: 0,
-    selectedPositions: ['C']
+  const [settings, setSettings] = useState<GameSettings>(() => {
+    if (typeof window !== 'undefined') {
+      const savedSettings = localStorage.getItem('gameSettings');
+      return savedSettings ? JSON.parse(savedSettings) : {
+        ranges: {
+          A: { min: 1, max: 10 },
+          B: { min: 1, max: 10 },
+          C: { min: 1, max: 100 }
+        },
+        timerEnabled: false,
+        timerDuration: 0,
+        selectedPositions: ['C']
+      };
+    }
+    return {
+      ranges: {
+        A: { min: 1, max: 10 },
+        B: { min: 1, max: 10 },
+        C: { min: 1, max: 100 }
+      },
+      timerEnabled: false,
+      timerDuration: 0,
+      selectedPositions: ['C']
+    };
   });
 
   const generateQuestion = useCallback((position: QuestionPosition = 'C') => {
@@ -211,11 +226,6 @@ const Home = () => {
 
   return (
     <div className="max-w-4xl mx-auto h-[calc(100vh-5rem)] flex items-center justify-center relative">
-      <Toolbar 
-        settings={settings}
-        onSettingsChange={setSettings}
-      />
-
       <AnimatePresence>
         {notification && (
           <motion.div
@@ -283,5 +293,6 @@ const Home = () => {
     </div>
   );
 }
+
 export default Home;
 

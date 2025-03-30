@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { QuestionLog } from '../types/types';
 
+type TimePeriod = 'overall' | 'today' | 'week' | 'month';
+
 interface HeatmapCell {
   total: number;
   correct: number;
@@ -18,23 +20,41 @@ export default function Progress() {
     correct: 0,
     averageTime: 0,
   });
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('overall');
 
-  useEffect(() => {
-    const savedLogs = localStorage.getItem('questionLogs');
-    const parsedLogs = savedLogs ? JSON.parse(savedLogs) : [];
-    setLogs(parsedLogs);
+  const filterLogsByPeriod = (logs: QuestionLog[], period: TimePeriod) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay());
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Calculate stats
-    const total = parsedLogs.length;
-    const correct = parsedLogs.filter((log: QuestionLog) => log.isCorrect).length;
-    const averageTime = parsedLogs.reduce((acc: number, log: QuestionLog) => acc + log.timeToAnswer, 0) / total || 0;
+    return logs.filter(log => {
+      const logDate = new Date(log.timestamp);
+      switch (period) {
+        case 'today':
+          return logDate >= today;
+        case 'week':
+          return logDate >= weekStart;
+        case 'month':
+          return logDate >= monthStart;
+        default:
+          return true;
+      }
+    });
+  };
+
+  const calculateStats = (filteredLogs: QuestionLog[]) => {
+    const total = filteredLogs.length;
+    const correct = filteredLogs.filter(log => log.isCorrect).length;
+    const averageTime = filteredLogs.reduce((acc, log) => acc + log.timeToAnswer, 0) / total || 0;
 
     // Calculate heatmap data
     const heatmap: HeatmapCell[][] = Array(10).fill(null).map(() => 
       Array(10).fill(null).map(() => ({ total: 0, correct: 0, percentage: 0 }))
     );
 
-    parsedLogs.forEach((log: QuestionLog) => {
+    filteredLogs.forEach(log => {
       const i = log.question.a - 1;
       const j = log.question.b - 1;
       heatmap[i][j].total++;
@@ -50,7 +70,18 @@ export default function Progress() {
       correct,
       averageTime,
     });
+  };
+
+  useEffect(() => {
+    const savedLogs = localStorage.getItem('questionLogs');
+    const parsedLogs = savedLogs ? JSON.parse(savedLogs) : [];
+    setLogs(parsedLogs);
   }, []);
+
+  useEffect(() => {
+    const filteredLogs = filterLogsByPeriod(logs, selectedPeriod);
+    calculateStats(filteredLogs);
+  }, [logs, selectedPeriod]);
 
   const getHeatmapColor = (percentage: number, total: number) => {
     if (total === 0) return 'bg-gray-50';
@@ -62,6 +93,13 @@ export default function Progress() {
     return 'bg-red-500 text-white';
   };
 
+  const tabs: { id: TimePeriod; label: string }[] = [
+    { id: 'overall', label: 'Overall' },
+    { id: 'today', label: 'Today' },
+    { id: 'week', label: 'This Week' },
+    { id: 'month', label: 'This Month' },
+  ];
+
   return (
     <div className="container mx-auto px-4 py-8">
       <motion.div
@@ -69,6 +107,23 @@ export default function Progress() {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-8"
       >
+        {/* Tabs */}
+        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setSelectedPeriod(tab.id)}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                selectedPeriod === tab.id
+                  ? 'bg-white text-blue-600 shadow'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl shadow-lg p-6">
@@ -109,7 +164,7 @@ export default function Progress() {
                   {[...Array(10)].map((_, j) => (
                     <div
                       key={`cell-${i}-${j}`}
-                      className={`h-10 flex items-center justify-center text-sm transition-colors ${
+                      className={`h-10 flex flex-col items-center justify-center text-sm transition-colors ${
                         getHeatmapColor(heatmapData[i]?.[j]?.percentage || 0, heatmapData[i]?.[j]?.total || 0)
                       }`}
                       title={`${i + 1} × ${j + 1} = ${(i + 1) * (j + 1)}
@@ -117,7 +172,16 @@ Attempts: ${heatmapData[i]?.[j]?.total || 0}
 Correct: ${heatmapData[i]?.[j]?.correct || 0}
 Success Rate: ${(heatmapData[i]?.[j]?.percentage || 0).toFixed(1)}%`}
                     >
-                      {heatmapData[i]?.[j]?.total ? `${heatmapData[i]?.[j]?.percentage.toFixed(0)}%` : '-'}
+                      {heatmapData[i]?.[j]?.total ? (
+                        <>
+                          <span>{heatmapData[i]?.[j]?.percentage.toFixed(0)}%</span>
+                          <span className="text-xs opacity-75">
+                            ({heatmapData[i]?.[j]?.correct || 0}/{heatmapData[i]?.[j]?.total - (heatmapData[i]?.[j]?.correct || 0)}/{heatmapData[i]?.[j]?.total || 0})
+                          </span>
+                        </>
+                      ) : (
+                        '-'
+                      )}
                     </div>
                   ))}
                 </>

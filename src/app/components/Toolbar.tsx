@@ -63,12 +63,7 @@ export default function Toolbar({ settings, onSettingsChange }: ToolbarProps) {
   };
 
   return (
-    <motion.div 
-      className="absolute top-4 right-4 bg-white rounded-xl shadow-lg p-2 flex items-center"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <motion.div>
       {/* Ranges group */}
       <div className="flex flex-col items-center">
         <span className="text-xs text-gray-500 mb-1">Number Ranges</span>
@@ -101,9 +96,6 @@ export default function Toolbar({ settings, onSettingsChange }: ToolbarProps) {
         </div>
       </div>
 
-      {/* Spacer */}
-      <div className="w-px h-8 bg-gray-200 mx-2" />
-
       {/* Timer group */}
       <div className="flex flex-col items-center">
         <span className="text-xs text-gray-500 mb-1">Timer</span>
@@ -133,8 +125,6 @@ export default function Toolbar({ settings, onSettingsChange }: ToolbarProps) {
         </div>
       </div>
 
-      {/* Spacer */}
-      <div className="w-px h-8 bg-gray-200 mx-2" />
 
       {/* Position buttons group */}
       <div className="flex flex-col items-center">
@@ -156,9 +146,6 @@ export default function Toolbar({ settings, onSettingsChange }: ToolbarProps) {
           ))}
         </div>
       </div>
-
-      {/* Spacer for future buttons */}
-      <div className="w-px h-8 bg-gray-200 mx-2" />
     </motion.div>
   );
 } 
