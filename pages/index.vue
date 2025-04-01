@@ -1,5 +1,7 @@
 <template>
   <div>
-    Hello world
+    Game
   </div>
 </template>
+
+

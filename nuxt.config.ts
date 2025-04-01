@@ -1,3 +1,5 @@
+import tailwindcss from "@tailwindcss/vite";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
@@ -12,5 +14,24 @@ export default defineNuxtConfig({
     }
   },
 
-  modules: ["nitro-cloudflare-dev"]
+  modules: [
+    "nitro-cloudflare-dev",
+    '@nuxt/ui',
+    '@pinia/nuxt',
+    'pinia-plugin-persistedstate',
+  ],
+  css: ['~/assets/css/main.css'],
+  colorMode:{
+    preference: 'light',
+    fallback: 'light',
+    classPrefix: '',
+  },
+  vite: {
+    plugins: [
+      tailwindcss(),
+    ],
+  },
+  pinia: {
+    storesDirs: ['./stores/**'],
+  },
 })
