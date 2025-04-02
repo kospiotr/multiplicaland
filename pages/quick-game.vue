@@ -10,8 +10,8 @@
       New Game
     </UButton>
     <GameComponent v-if="!currentGameStore.isCompleted()"/>
+    <AnswersSummary :answers="currentGameStore.answers" v-else />
 
-    <GameSummary v-else />
   </div>
 </template>
 

@@ -6,19 +6,13 @@ export function useGameSessionCreator() {
   function newQuickGame(settings: GameSettingsSchema): MultiplicationBasicQuestion[] {
     const availableQuestions = findAvailableQuestions(settings);
     const questions: MultiplicationBasicQuestion[] = []
-    const numQuestions = Math.min(settings.questionsCount, availableQuestions.length)
 
-    // Create a copy of available questions to avoid duplicates
-    const remainingQuestions = [...availableQuestions]
 
-    for (let i = 0; i < numQuestions; i++) {
+    for (let i = 0; i < settings.questionsCount; i++) {
       // Randomly select a question from remaining questions
-      const questionIndex = Math.floor(Math.random() * remainingQuestions.length)
-      const selectedQuestion = remainingQuestions[questionIndex]
+      const questionIndex = Math.floor(Math.random() * availableQuestions.length)
+      const selectedQuestion = availableQuestions[questionIndex]
       
-      // Remove the selected question to avoid duplicates
-      remainingQuestions.splice(questionIndex, 1)
-
       // Determine which variables can be used based on settings
       const availableVariables = ['multiplicand', 'multiplier', 'product'].filter(v => 
         (v === 'multiplicand' && settings.multiplicandVariable) ||

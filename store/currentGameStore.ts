@@ -1,7 +1,8 @@
 import {defineStore} from 'pinia'
 import {useGameSessionCreator} from '~/composables/useGameSessionCreator'
-import type {Answer, GameSettingsSchema, MultiplicationBasicQuestion} from '~/types'
-import {correctAnswerProvider, placeholderQuestionTextProvider} from "~/types";
+import type {Answer, GameSettingsSchema, GameStats, MultiplicationBasicQuestion} from '~/types'
+import {answerStats, correctAnswerProvider, placeholderQuestionTextProvider} from "~/types";
+import {useGameProgressStore} from "~/store/progressStore";
 
 
 
@@ -38,6 +39,7 @@ export const useCurrentGameStore = defineStore('currentGame', () => {
             finishedTs
         };
         answers.value.push(out)
+        useGameProgressStore().submitAnswer(out)
         return out;
     }
 
@@ -60,27 +62,10 @@ export const useCurrentGameStore = defineStore('currentGame', () => {
         return correctAnswerProvider(currentQuestion())
     }
 
-    function stats() {
+    function stats(): GameStats {
         const total = questions.value.length
-
-        const correct = answers.value.reduce((acc, value) => {
-            if (value.status === 'correct') {
-                acc++;
-            }
-            return acc
-        }, 0);
-        let incorrect = answers.value.reduce((acc, value) => {
-            if (value.status === 'incorrect') {
-                acc++;
-            }
-            return acc
-        }, 0);
-        const answeredCount = answers.value.length;
-        const percentage = answeredCount > 0 ? (correct / answeredCount) * 100 : 100
-        let out = {
-            correct, incorrect, percentage: Math.round(percentage), answeredCount, total
-        };
-        return out
+        const stats = answerStats(answers.value);
+        return Object.assign({total: total}, stats)
     }
 
 
