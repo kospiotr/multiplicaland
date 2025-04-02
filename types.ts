@@ -19,12 +19,35 @@ export interface MultiplicationEquation {
 }
 
 
-export interface MultiplicationBasicQuestion extends MultiplicationEquation{
+export interface MultiplicationBasicQuestion extends MultiplicationEquation {
     variable: 'multiplicand' | 'multiplier' | 'product'
 }
+
+export const placeholderQuestionTextProvider = (question: MultiplicationBasicQuestion) => {
+    if (question.variable === 'multiplicand') {
+        return `? × ${question?.multiplier} = ${question?.product}`
+    } else if (question.variable === 'multiplier') {
+        return `${question?.multiplicand} × ? = ${question?.product}`
+    } else {
+        return `${question?.multiplicand} × ${question?.multiplier} = ?`
+    }
+
+}
+
+export const correctAnswerProvider = (question: MultiplicationBasicQuestion) => {
+    if (question.variable === 'multiplicand') {
+        return question.multiplicand;
+    } else if (question.variable === 'multiplier') {
+        return question.multiplier;
+    } else {
+        return question.product;
+    }
+}
+
 export interface Answer {
     question: MultiplicationBasicQuestion
     value: number
     status: 'correct' | 'incorrect'
-    duration: number
+    startedTs: number
+    finishedTs: number
 }

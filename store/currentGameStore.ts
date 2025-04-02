@@ -1,6 +1,8 @@
 import {defineStore} from 'pinia'
 import {useGameSessionCreator} from '~/composables/useGameSessionCreator'
 import type {Answer, GameSettingsSchema, MultiplicationBasicQuestion} from '~/types'
+import {correctAnswerProvider, placeholderQuestionTextProvider} from "~/types";
+
 
 
 export const useCurrentGameStore = defineStore('currentGame', () => {
@@ -9,21 +11,33 @@ export const useCurrentGameStore = defineStore('currentGame', () => {
     const currentQuestionIndex = ref(0)
     const answers = ref<Answer[]>([])
 
-    function createOrResumeGame(setting: GameSettingsSchema, type: string) {
+
+    function createNewGame(setting: GameSettingsSchema, type: string) {
         const sessionCreator = useGameSessionCreator()
         settings.value = setting;
         questions.value = sessionCreator.newQuickGame(setting)
+        currentQuestionIndex.value = 0;
+        answers.value = [];
+
+    }
+    function isCompleted() {
+        return answers.value.length >= questions.value.length;
     }
 
-    function submitAnswer(answer: number) {
+    function submitAnswer(value: number, startedTs: number, finishedTs: number) {
         const question = currentQuestion();
         if (question === undefined) {
             throw "Can't find current question"
         }
-        const status: 'correct' | 'incorrect' = answer === question.product ? 'correct' : 'incorrect';
-        let out = {question, value: answer, status, duration: 0};
+        const status: 'correct' | 'incorrect' = value === correctAnswer() ? 'correct' : 'incorrect';
+        let out = {
+            question,
+            value,
+            status,
+            startedTs,
+            finishedTs
+        };
         answers.value.push(out)
-        console.log('answers', answers)
         return out;
     }
 
@@ -39,27 +53,11 @@ export const useCurrentGameStore = defineStore('currentGame', () => {
     }
 
     function currentQuestionText() {
-        const question = currentQuestion()
-        if (settings.value?.multiplicandVariable) {
-            return `? × ${question?.multiplier} = ${question?.product}`
-        } else if (settings.value?.multiplierVariable) {
-            return `${question?.multiplicand} × ? = ${question?.product}`
-        } else {
-            return `${question?.multiplicand} × ${question?.multiplier} = ?`
-        }
-
+        return placeholderQuestionTextProvider(currentQuestion())
     }
 
     function correctAnswer() {
-        const question = currentQuestion()
-        if (settings.value?.multiplicandVariable) {
-            return question?.multiplicand;
-        } else if (settings.value?.multiplierVariable) {
-            return question?.multiplier;
-        } else {
-            return question?.product;
-        }
-
+        return correctAnswerProvider(currentQuestion())
     }
 
     function stats() {
@@ -78,17 +76,16 @@ export const useCurrentGameStore = defineStore('currentGame', () => {
             return acc
         }, 0);
         const answeredCount = answers.value.length;
-        const percentage = total > 0 ? (correct / answeredCount) * 100 : 0
+        const percentage = answeredCount > 0 ? (correct / answeredCount) * 100 : 100
         let out = {
             correct, incorrect, percentage: Math.round(percentage), answeredCount, total
         };
-        console.log('stats', stats)
         return out
     }
 
 
     return {
-        initializeGame: createOrResumeGame,
+        createNewGame,
         submitAnswer,
         currentQuestion,
         answers,
@@ -96,7 +93,8 @@ export const useCurrentGameStore = defineStore('currentGame', () => {
         settings,
         currentQuestionText,
         correctAnswer,
-        nextQuestion
+        nextQuestion,
+        isCompleted
     }
 }, {
     persist: {
