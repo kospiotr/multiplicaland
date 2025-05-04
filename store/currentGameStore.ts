@@ -6,21 +6,25 @@ import {useGameProgressStore} from "~/store/progressStore";
 
 
 
-export const useCurrentGameStore = defineStore('currentGame', () => {
+export const useCurrentGameStore = defineStore('current-game', () => {
     const settings = ref<GameSettingsSchema>()
     const questions = ref<MultiplicationBasicQuestion[]>([])
     const currentQuestionIndex = ref(0)
     const answers = ref<Answer[]>([])
 
 
-    function createNewGame(setting: GameSettingsSchema, type: string) {
+    function createNewGame(setting: GameSettingsSchema) {
         const sessionCreator = useGameSessionCreator()
         settings.value = setting;
         questions.value = sessionCreator.newQuickGame(setting)
         currentQuestionIndex.value = 0;
         answers.value = [];
-
+        console.log('created game', questions.value);
     }
+    function isStarted() {
+        return questions.value.length > 0;
+    }
+
     function isCompleted() {
         return answers.value.length >= questions.value.length;
     }
@@ -73,13 +77,15 @@ export const useCurrentGameStore = defineStore('currentGame', () => {
         createNewGame,
         submitAnswer,
         currentQuestion,
+        questions,
         answers,
         stats,
         settings,
         currentQuestionText,
         correctAnswer,
         nextQuestion,
-        isCompleted
+        isCompleted,
+        isStarted
     }
 }, {
     persist: {

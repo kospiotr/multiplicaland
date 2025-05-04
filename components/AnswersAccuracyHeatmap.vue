@@ -1,38 +1,41 @@
 <template>
-  <table class="justify-self-center mb-8">
-    <tbody>
-    <template v-for="(row) in (multiplicandMax - multiplicandMin + 2)" :key="row">
-      <tr>
-        <template v-for="(col) in (multiplierMax - multiplierMin + 2)" :key="col">
-          <th v-if="col === 1 && row === 1" class="corner">
-            <span class="x">x</span>
-            <span class="y">y</span>
-          </th>
-          <th v-else-if="col === 1">
-            {{ row - 1 }}
-          </th>
-          <th v-else-if="row === 1">
-            {{ col - 1 }}
-          </th>
-          <td v-else>
-            <UButton
-                :style="{ backgroundColor: getCellColor(row - 1, col - 1) }"
-                style="width: 40px; height: 40px; justify-content: center;"
-            >
-              {{ getAccuracy(row - 1, col - 1)}}
-<!--              {{ (row - 1) * (col - 1) }}-->
-            </UButton>
-          </td>
-        </template>
-      </tr>
-    </template>
-    </tbody>
-  </table>
+  <UCard variant="subtle">
+    <template #header>Accuracy Heatmap</template>
+    <table class="justify-self-center mb-8">
+      <tbody>
+      <template v-for="(row) in (multiplicandMax - multiplicandMin + 2)" :key="row">
+        <tr>
+          <template v-for="(col) in (multiplierMax - multiplierMin + 2)" :key="col">
+            <th v-if="col === 1 && row === 1" class="corner">
+              <span class="x">x</span>
+              <span class="y">y</span>
+            </th>
+            <th v-else-if="col === 1">
+              {{ row - 1 }}
+            </th>
+            <th v-else-if="row === 1">
+              {{ col - 1 }}
+            </th>
+            <td v-else>
+              <UButton
+                  :style="{ backgroundColor: getCellColor(row - 1, col - 1) }"
+                  style="width: 40px; height: 40px; justify-content: center;"
+              >
+                {{ getAccuracy(row - 1, col - 1) }}
+                <!--              {{ (row - 1) * (col - 1) }}-->
+              </UButton>
+            </td>
+          </template>
+        </tr>
+      </template>
+      </tbody>
+    </table>
+  </UCard>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import type { Answer } from '~/types';
+import {computed, ref} from 'vue';
+import type {Answer} from '~/types';
 
 const props = defineProps<{
   answers: Answer[];
@@ -43,7 +46,7 @@ const multiplicandMax = ref(10);
 const multiplierMin = ref(1);
 const multiplierMax = ref(10);
 
-function getAccuracy(multiplicand: number, multiplier: number){
+function getAccuracy(multiplicand: number, multiplier: number) {
   const relevantAnswers = props.answers.filter(answer =>
       answer.question.multiplicand === multiplicand && answer.question.multiplier === multiplier
   );
@@ -62,7 +65,7 @@ function getCellColor(multiplicand: number, multiplier: number): string {
 }
 
 function blendColor(accuracy: number | undefined): string {
-  if(accuracy === undefined){
+  if (accuracy === undefined) {
     return 'lightgrey';
   }
   const red = Math.min(255, Math.floor((100 - accuracy) * 2.55));

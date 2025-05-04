@@ -2,7 +2,7 @@ import {defineStore} from 'pinia'
 import type {Answer} from "~/types";
 
 
-export const useGameProgressStore = defineStore('gameProgress', () => {
+export const useGameProgressStore = defineStore('progress', () => {
     const answers = ref<Answer[]>([])
 
     function submitAnswer(answer: Answer) {

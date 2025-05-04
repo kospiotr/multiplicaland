@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <UCard variant="subtle">
+    <template #header>Timing Heatmap</template>
     <table class="justify-self-center mb-8">
       <tbody>
       <template v-for="(row) in (multiplicandMax - multiplicandMin + 2)" :key="row">
@@ -40,7 +41,7 @@
         <strong>Slowest:</strong> {{ formatDuration(slowest) }}
       </div>
     </div>
-  </div>
+  </UCard>
 </template>
 
 <script setup lang="ts">

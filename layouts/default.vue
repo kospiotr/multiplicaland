@@ -4,6 +4,7 @@
         highlight
         highlight-color="secondary"
         orientation="horizontal"
+        content-orientation="vertical"
         :items="items"
         class="data-[orientation=horizontal]:border-b border-(--ui-border) data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-48"
     />
@@ -14,7 +15,9 @@
 
 <script setup lang="ts">
 import type {NavigationMenuItem} from '@nuxt/ui'
-
+import {useGameSettingsStore} from "~/store/gameSettingsStore";
+import {useCurrentGameStore} from "~/store/currentGameStore";
+const router = useRouter();
 const colorMode = useColorMode()
 
 const isDark = computed({
@@ -28,21 +31,36 @@ const isDark = computed({
 const items = ref<NavigationMenuItem[][]>([
   [
     {
-      label: 'Multiplica-Land'
+      label: 'Multiplica-Land',
+      icon: 'i-lucide-house',
+      to: '/'
     }
-
   ],
   [
-    {label: 'Quick Game', to: '/quick-game'},
-    {label: 'Adventure', to: '/adventure'},
-    {label: 'Progress', to: '/progress'},
-    {label: 'Achievements', to: '/achievements'},
-    {label: 'Settings', to: '/settings'},
     {
-      icon: isDark.value ?  'i-lucide-sun' : 'i-lucide-moon', onSelect(e) {
+      icon: 'i-lucide-square-plus', onSelect(e) {
+        const settingsStore = useGameSettingsStore()
+        const currentGameStore = useCurrentGameStore()
+        currentGameStore.createNewGame(settingsStore.data);
+        router.push('/');
+      }
+    },
+    {
+      icon: isDark.value ? 'i-lucide-sun' : 'i-lucide-moon', onSelect(e) {
         isDark.value = !isDark.value;
       },
     },
+    {
+      icon: 'i-lucide-user' , children:
+          [
+            {label: 'Login', to: '/login'},
+            {label: 'Register', to: '/register'},
+            {label: 'Progress', to: '/progress'},
+            {label: 'Achievements', to: '/achievements'},
+            {label: 'Settings', to: '/settings'},
+          ]
+    }
+
   ]
 ])
 </script>

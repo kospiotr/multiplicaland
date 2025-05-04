@@ -83,36 +83,30 @@ onMounted(() => {
         </div>
       </div>
     </div>
-
-    <!-- Question Display -->
-    <div class="bg-white rounded-2xl shadow-lg p-8 mb-8 transform transition-all duration-300 hover:scale-105">
-      <div class="text-center">
-        <div class="text-6xl font-bold text-gray-800 mb-6">
-          {{ question }}
-        </div>
-        <div class="flex justify-center items-center gap-4">
-          <UInput
-              ref="inputRef"
-              v-model="answer"
-              type="number"
-              class="w-32 text-center text-3xl font-bold text-primary-600"
-              placeholder="?"
-              @keyup.enter="checkAnswer"
-              :disabled="isCorrect !== null"
-          />
-          <UButton
-              color="primary"
-              size="xl"
-              :disabled="isCorrect !== null"
-              class="transition-transform hover:scale-110"
-              @click="checkAnswer"
-          >
-            <UIcon name="i-heroicons-check" class="h-6 w-6 mr-2"/>
-            Check
-          </UButton>
-        </div>
+    <UCard variant="subtle">
+      <!-- Question Display -->
+      <div class="text-6xl font-bold text-primary mb-6">
+        {{ question }}
       </div>
-    </div>
+      <div class="flex gap-2">
+        <UInput
+            ref="inputRef"
+            v-model="answer"
+            type="number"
+            placeholder="?"
+            @keyup.enter="checkAnswer"
+            :disabled="isCorrect !== null"
+        />
+        <UButton
+            :disabled="isCorrect !== null"
+            class=""
+            @click="checkAnswer"
+        >
+          <UIcon name="i-heroicons-check"/>
+          Check
+        </UButton>
+      </div>
+    </UCard>
 
     <!-- Feedback Display -->
     <div v-if="isCorrect !== null" class="text-center mb-8">
