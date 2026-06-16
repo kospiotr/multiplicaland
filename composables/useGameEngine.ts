@@ -1,22 +1,20 @@
 import {ref, onMounted, onUnmounted, watch} from 'vue'
-import {useGameSettingsStore} from '~/store/gameSettingsStore'
 import {useCurrentGameStore} from "~/store/currentGameStore";
 
 export function useGameEngine() {
-    const store = useGameSettingsStore()
     const currentGameStore = useCurrentGameStore()
 
-    const settings = store.data
+    const initialTimer = currentGameStore.settings?.timer ?? 0
 
     const stats = computed(() => currentGameStore.stats())
     const answer = ref('')
     const isCorrect = ref<boolean | null>(null)
     const correctAnswer = computed(() => currentGameStore.correctAnswer())
     const isCompleted = computed(() => currentGameStore.isCompleted())
-    const timeLeft = ref(settings.timer)
+    const timeLeft = ref(initialTimer)
     const timerInterval = ref<number | null>(null)
     const question = computed(() => currentGameStore.currentQuestionText())
-    const timerValue = ref(settings.timer)
+    const timerValue = ref(initialTimer)
     const focusInput = ref<(() => void) | null>(null)
     const paused = ref(false)
     const questionStartTime = ref<number>(Date.now())

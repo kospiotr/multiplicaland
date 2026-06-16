@@ -1,5 +1,8 @@
 <template>
-  <div class="max-w-4xl mx-auto p-8 flex flex-col items-center justify-center p-4 gap-8">
+  <div class="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6 sm:py-8">
+    <h1 class="flex items-center gap-2 font-display text-3xl font-extrabold text-violet-600 dark:text-violet-300">
+      <span>📈</span> Progress
+    </h1>
     <UTabs v-model="activeTab" :content="false" :items="items" class="w-full"/>
     <AnswersSummary :answers="filteredAnswers"/>
   </div>

@@ -1,7 +1,12 @@
 <template>
-  <UCard variant="subtle">
-    <template #header>Timing Heatmap</template>
-    <table class="justify-self-center mb-8">
+  <UCard variant="subtle" class="rounded-3xl">
+    <template #header>
+      <div class="flex items-center gap-2 font-display text-lg font-bold">
+        <span class="text-xl">⏱️</span> Speed
+      </div>
+    </template>
+    <div class="overflow-x-auto">
+    <table class="justify-self-center mx-auto mb-2">
       <tbody>
       <template v-for="(row) in (multiplicandMax - multiplicandMin + 2)" :key="row">
         <tr>
@@ -17,28 +22,31 @@
               {{ col - 1 }}
             </th>
             <td v-else>
-              <UButton
-                  :style="{ backgroundColor: getCellColor(row - 1, col - 1) }"
-                  style="width: 40px; height: 40px; justify-content: center;"
+              <div
+                  class="flex items-center justify-center rounded-xl text-xs font-bold text-white shadow-sm"
+                  :style="{ backgroundColor: getCellColor(row - 1, col - 1), width: '38px', height: '38px' }"
               >
                 {{ formatDuration(getCellDuration(row - 1, col - 1)) }}
-                <!--              {{ (row - 1) * (col - 1) }}-->
-              </UButton>
+              </div>
             </td>
           </template>
         </tr>
       </template>
       </tbody>
     </table>
-    <div class="timings-container">
-      <div class="timing-item">
-        <strong>Fastest:</strong> {{ formatDuration(fastest) }}
+    </div>
+    <div class="mt-4 grid grid-cols-3 gap-3">
+      <div class="rounded-2xl bg-green-50 p-3 text-center dark:bg-green-500/10">
+        <div class="text-xs font-semibold text-green-600 dark:text-green-400">⚡ Fastest</div>
+        <div class="font-display text-lg font-extrabold text-green-600 dark:text-green-400">{{ formatDuration(fastest) }}</div>
       </div>
-      <div class="timing-item">
-        <strong>Average:</strong> {{ formatDuration(average) }}
+      <div class="rounded-2xl bg-violet-50 p-3 text-center dark:bg-violet-500/10">
+        <div class="text-xs font-semibold text-violet-600 dark:text-violet-300">📈 Average</div>
+        <div class="font-display text-lg font-extrabold text-violet-600 dark:text-violet-300">{{ formatDuration(average) }}</div>
       </div>
-      <div class="timing-item">
-        <strong>Slowest:</strong> {{ formatDuration(slowest) }}
+      <div class="rounded-2xl bg-amber-50 p-3 text-center dark:bg-amber-500/10">
+        <div class="text-xs font-semibold text-amber-600 dark:text-amber-400">🐢 Slowest</div>
+        <div class="font-display text-lg font-extrabold text-amber-600 dark:text-amber-400">{{ formatDuration(slowest) }}</div>
       </div>
     </div>
   </UCard>

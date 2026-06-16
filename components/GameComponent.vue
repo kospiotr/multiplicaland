@@ -25,134 +25,132 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center p-4 gap-8">
-    <!-- Stats Panel -->
-    <div class="">
-      <div class="flex items-center gap-6">
+  <div class="flex w-full flex-col items-center gap-5">
+    <!-- Stats pills -->
+    <div class="flex w-full flex-wrap items-center justify-center gap-2">
+      <!-- Time left -->
+      <div
+          v-if="timerValue > 0"
+          class="flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur dark:bg-slate-800/70"
+      >
+        <UIcon name="i-lucide-timer" class="h-4 w-4" :class="{
+          'text-green-500': timeLeft > timerValue * 0.7,
+          'text-amber-500': timeLeft > timerValue * 0.3 && timeLeft <= timerValue * 0.7,
+          'text-red-500': timeLeft <= timerValue * 0.3
+        }"/>
+        <span class="text-sm font-bold tabular-nums" :class="{
+          'text-green-500': timeLeft > timerValue * 0.7,
+          'text-amber-500': timeLeft > timerValue * 0.3 && timeLeft <= timerValue * 0.7,
+          'text-red-500': timeLeft <= timerValue * 0.3
+        }">{{ timeLeft }}s</span>
+      </div>
 
-
-        <!-- Progress -->
-        <div class="flex items-center gap-2">
-          <UIcon name="i-heroicons-clock" class="h-5 w-5 text-primary-500"/>
-          <div class="text-sm font-medium" :class="{
-            'text-green-500': timeLeft > timerValue * 0.7,
-            'text-yellow-500': timeLeft > timerValue * 0.3 && timeLeft <= timerValue * 0.7,
-            'text-red-500': timeLeft <= timerValue * 0.3
-          }">
-            {{ timeLeft }}s
-          </div>
+      <!-- Progress -->
+      <div class="flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur dark:bg-slate-800/70">
+        <div class="h-2 w-16 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+          <div
+              class="h-full rounded-full bg-gradient-to-r from-violet-500 to-pink-500 transition-all duration-300"
+              :style="{ width: `${(stats.answeredCount / stats.total) * 100}%` }"
+          />
         </div>
+        <span class="text-sm font-bold tabular-nums text-slate-600 dark:text-slate-300">{{ stats.answeredCount }}/{{ stats.total }}</span>
+      </div>
 
+      <!-- Correct -->
+      <div class="flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1.5 shadow-sm dark:bg-green-500/15">
+        <UIcon name="i-lucide-check-circle-2" class="h-4 w-4 text-green-500"/>
+        <span class="text-sm font-bold text-green-600 dark:text-green-400">{{ stats.correct }}</span>
+      </div>
 
-        <!-- Timer -->
-        <div class="flex items-center gap-2">
-          <UIcon name="i-heroicons-chart-bar" class="h-5 w-5 text-primary-500"/>
-          <div class="w-12 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div
-                class="h-full bg-primary-500 transition-all duration-300"
-                :style="{ width: `${(stats.answeredCount / stats.total) * 100}%` }"
-            />
-          </div>
-          <span class="text-sm font-medium">{{ stats.answeredCount }}/{{ stats.total }}</span>
-        </div>
+      <!-- Incorrect -->
+      <div class="flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1.5 shadow-sm dark:bg-red-500/15">
+        <UIcon name="i-lucide-x-circle" class="h-4 w-4 text-red-500"/>
+        <span class="text-sm font-bold text-red-600 dark:text-red-400">{{ stats.incorrect }}</span>
+      </div>
 
-        <!-- Correct -->
-        <div class="flex items-center gap-1">
-          <UIcon name="i-heroicons-check-circle" class="h-5 w-5 text-green-500"/>
-          <span class="text-sm font-medium text-green-500">{{ stats.correct }}</span>
-        </div>
-
-        <!-- Incorrect -->
-        <div class="flex items-center gap-1">
-          <UIcon name="i-heroicons-x-circle" class="h-5 w-5 text-red-500"/>
-          <span class="text-sm font-medium text-red-500">{{ stats.incorrect }}</span>
-        </div>
-
-        <!-- Success Rate -->
-        <div class="flex items-center gap-1">
-          <UIcon name="i-heroicons-trophy" class="h-5 w-5" :class="{
-                'text-green-500': stats.percentage >= 80,
-                'text-yellow-500': stats.percentage >= 50 && stats.percentage < 80,
-                'text-red-500': stats.percentage < 50
-              }"/>
-          <span class="text-sm font-medium" :class="{
-                'text-green-500': stats.percentage >= 80,
-                'text-yellow-500': stats.percentage >= 50 && stats.percentage < 80,
-                'text-red-500': stats.percentage < 50
-              }">{{ stats.percentage }}%</span>
-        </div>
+      <!-- Success rate -->
+      <div class="flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur dark:bg-slate-800/70">
+        <UIcon name="i-lucide-star" class="h-4 w-4" :class="{
+          'text-green-500': stats.percentage >= 80,
+          'text-amber-500': stats.percentage >= 50 && stats.percentage < 80,
+          'text-red-500': stats.percentage < 50
+        }"/>
+        <span class="text-sm font-bold tabular-nums" :class="{
+          'text-green-500': stats.percentage >= 80,
+          'text-amber-500': stats.percentage >= 50 && stats.percentage < 80,
+          'text-red-500': stats.percentage < 50
+        }">{{ stats.percentage }}%</span>
       </div>
     </div>
-    <UCard variant="subtle">
-      <!-- Question Display -->
-      <div class="text-6xl font-bold text-primary mb-6">
+
+    <!-- Question card -->
+    <div
+        class="relative w-full max-w-md overflow-hidden rounded-3xl border-2 border-white/60 bg-white/80 p-6 shadow-xl backdrop-blur-md transition-all dark:border-white/10 dark:bg-slate-800/80 sm:p-8"
+        :class="{
+          'border-green-300 dark:border-green-500/40': isCorrect === true,
+          'border-red-300 dark:border-red-500/40 animate-shake': isCorrect === false
+        }"
+    >
+      <!-- Decorative blobs -->
+      <div class="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-violet-300/40 blur-2xl"/>
+      <div class="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-pink-300/40 blur-2xl"/>
+
+      <p class="relative mb-2 text-center text-sm font-semibold uppercase tracking-wide text-violet-400 dark:text-violet-300">
+        What's the answer?
+      </p>
+      <div class="relative mb-6 text-center font-display text-5xl font-extrabold text-slate-800 dark:text-white sm:text-6xl">
         {{ question }}
       </div>
-      <div class="flex gap-2">
+
+      <div class="relative flex flex-col gap-3 sm:flex-row">
         <UInput
             ref="inputRef"
             v-model="answer"
             type="number"
             placeholder="?"
+            size="xl"
+            :ui="{ base: 'text-center text-2xl font-bold rounded-2xl py-3' }"
+            class="flex-1"
             @keyup.enter="checkAnswer"
             :disabled="isCorrect !== null"
         />
         <UButton
             :disabled="isCorrect !== null"
-            class=""
+            color="primary"
+            size="xl"
+            icon="i-lucide-check"
+            class="justify-center rounded-2xl px-6 font-bold shadow-md transition-transform hover:scale-105 active:scale-95"
             @click="checkAnswer"
         >
-          <UIcon name="i-heroicons-check"/>
           Check
         </UButton>
       </div>
-    </UCard>
+    </div>
 
-    <!-- Feedback Display -->
-    <div v-if="isCorrect !== null" class="text-center mb-8">
-      <div v-if="isCorrect" class="text-4xl font-bold text-green-500 mb-4 animate-bounce">
-        <UIcon name="i-heroicons-check-circle" class="h-12 w-12 mx-auto mb-2"/>
-        Correct!
+    <!-- Feedback -->
+    <div v-if="isCorrect !== null" class="flex flex-col items-center gap-3 text-center">
+      <div v-if="isCorrect" class="animate-pop-in">
+        <div class="mb-1 text-6xl">🎉</div>
+        <div class="font-display text-3xl font-extrabold text-green-500">Awesome!</div>
+        <div class="text-base font-medium text-slate-500 dark:text-slate-300">Great job, keep it up!</div>
       </div>
-      <div v-else class="text-4xl font-bold text-red-500 mb-4 animate-shake">
-        <UIcon name="i-heroicons-x-circle" class="h-12 w-12 mx-auto mb-2"/>
-        Try Again!
+      <div v-else class="animate-pop-in">
+        <div class="mb-1 text-6xl">💪</div>
+        <div class="font-display text-3xl font-extrabold text-red-500">Almost!</div>
+        <div class="text-base font-medium text-slate-500 dark:text-slate-300">
+          The answer is <span class="font-bold text-slate-700 dark:text-white">{{ correctAnswer }}</span>
+        </div>
       </div>
-      <div class="text-xl text-gray-600 mb-4">
-        {{ isCorrect ? 'Great job!' : `The correct answer is ${correctAnswer}` }}
-      </div>
+
       <UButton
           color="primary"
           size="xl"
-          class="transition-transform hover:scale-110"
+          :icon="paused ? 'i-lucide-play' : 'i-lucide-pause'"
+          class="rounded-full px-8 font-bold shadow-lg transition-transform hover:scale-110 active:scale-95"
           @click="pauseResume"
       >
-        <template v-if="paused">
-          Resume
-        </template>
-        <template v-else>
-          Pause
-        </template>
+        {{ paused ? 'Resume' : 'Pause' }}
       </UButton>
     </div>
-
   </div>
 </template>
-
-<style scoped>
-@keyframes shake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-5px);
-  }
-  75% {
-    transform: translateX(5px);
-  }
-}
-
-.animate-shake {
-  animation: shake 0.5s ease-in-out;
-}
-</style>

@@ -1,9 +1,15 @@
 <template>
-  <div class="max-w-4xl mx-auto p-8">
+  <div class="mx-auto max-w-4xl px-4 py-6 sm:py-8">
+    <h1 class="mb-5 flex items-center gap-2 font-display text-3xl font-extrabold text-violet-600 dark:text-violet-300">
+      <span>⚙️</span> Settings
+    </h1>
     <UForm ref="form" :state="state" class="w-full flex flex-col gap-4" @submit="onSubmit">
-      <UCard variant="subtle">
-        <template #header> Question range</template>
-        <table class="justify-self-center mb-8">
+      <UCard variant="subtle" class="rounded-3xl">
+        <template #header>
+          <div class="flex items-center gap-2 font-display text-lg font-bold"><span>🔢</span> Question range</div>
+        </template>
+        <div class="overflow-x-auto">
+        <table class="justify-self-center mx-auto mb-8">
           <tbody>
           <template v-for="(row) in (multiplicandMax - multiplicandMin + 2)" :key="row">
             <tr>
@@ -29,6 +35,7 @@
           </template>
           </tbody>
         </table>
+        </div>
         <div class="grid grid-cols-3 gap-4">
           <UFormField name="slider" label="X" :hint="state.multiplicandRange+''">
             <USlider v-model="state.multiplicandRange" :min="X_MIN" :max="X_MAX"/>
@@ -43,8 +50,10 @@
       </UCard>
 
 
-      <UCard variant="subtle">
-        <template #header>Variable position</template>
+      <UCard variant="subtle" class="rounded-3xl">
+        <template #header>
+          <div class="flex items-center gap-2 font-display text-lg font-bold"><span>❓</span> Variable position</div>
+        </template>
         <div class="grid grid-cols-3 gap-4">
           <UCheckbox label="X" v-model="state.multiplicandVariable" class="justify-self-center"/>
           <UCheckbox label="Y" v-model="state.multiplierVariable" class="justify-self-center"/>
@@ -52,21 +61,27 @@
         </div>
       </UCard>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
-        <UCard variant="subtle">
-          <template #header>Questions count</template>
+        <UCard variant="subtle" class="rounded-3xl">
+          <template #header>
+            <div class="flex items-center gap-2 font-display text-lg font-bold"><span>🔁</span> Questions count</div>
+          </template>
           <UInputNumber v-model="state.questionsCount" class=""/>
         </UCard>
 
-        <UCard variant="subtle">
-          <template #header>Timer</template>
+        <UCard variant="subtle" class="rounded-3xl">
+          <template #header>
+            <div class="flex items-center gap-2 font-display text-lg font-bold"><span>⏱️</span> Timer</div>
+          </template>
           <URadioGroup v-model="state.timer" :items="TIMER" orientation="horizontal"/>
         </UCard>
       </div>
 
-      <UCard variant="subtle">
-        <template #header>Foster questions</template>
+      <UCard variant="subtle" class="rounded-3xl">
+        <template #header>
+          <div class="flex items-center gap-2 font-display text-lg font-bold"><span>🌱</span> Foster questions</div>
+        </template>
         <div class="grid grid-cols-2 gap-4">
           <UFormField name="slider" label="Failed" :hint="state.productRange+''" class="flex-auto">
             <USlider v-model="state.fosterFailed" :min="PERCENTAGE_MIN" :max="PERCENTAGE_MAX"/>
@@ -78,6 +93,18 @@
       </UCard>
 
     </UForm>
+
+    <div class="sticky bottom-4 mt-6 flex justify-center">
+      <UButton
+          color="primary"
+          size="xl"
+          icon="i-lucide-play"
+          class="rounded-full px-10 py-3 text-lg font-bold shadow-xl transition-transform hover:scale-105 active:scale-95"
+          @click="startCustomGame"
+      >
+        Start game
+      </UButton>
+    </div>
   </div>
 </template>
 <style scoped>
@@ -122,6 +149,7 @@ import {
   Z_MAX,
   Z_MIN
 } from "~/store/gameSettingsStore";
+import {useCurrentGameStore} from "~/store/currentGameStore";
 
 
 function questionInRange(multiplicand: number, multiplier: number): boolean {
@@ -132,6 +160,13 @@ function questionInRange(multiplicand: number, multiplier: number): boolean {
 
 const store = useGameSettingsStore();
 const state = store.data;
+const currentGameStore = useCurrentGameStore();
+const router = useRouter();
+
+function startCustomGame() {
+  currentGameStore.createNewGame(state, 'custom');
+  router.push('/');
+}
 
 const form = useTemplateRef('form')
 

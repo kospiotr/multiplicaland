@@ -1,7 +1,12 @@
 <template>
-  <UCard variant="subtle">
-    <template #header>Accuracy Heatmap</template>
-    <table class="justify-self-center mb-8">
+  <UCard variant="subtle" class="rounded-3xl">
+    <template #header>
+      <div class="flex items-center gap-2 font-display text-lg font-bold">
+        <span class="text-xl">🎯</span> Accuracy
+      </div>
+    </template>
+    <div class="overflow-x-auto">
+    <table class="justify-self-center mx-auto mb-2">
       <tbody>
       <template v-for="(row) in (multiplicandMax - multiplicandMin + 2)" :key="row">
         <tr>
@@ -17,19 +22,19 @@
               {{ col - 1 }}
             </th>
             <td v-else>
-              <UButton
-                  :style="{ backgroundColor: getCellColor(row - 1, col - 1) }"
-                  style="width: 40px; height: 40px; justify-content: center;"
+              <div
+                  class="flex items-center justify-center rounded-xl text-xs font-bold text-white shadow-sm"
+                  :style="{ backgroundColor: getCellColor(row - 1, col - 1), width: '38px', height: '38px' }"
               >
                 {{ getAccuracy(row - 1, col - 1) }}
-                <!--              {{ (row - 1) * (col - 1) }}-->
-              </UButton>
+              </div>
             </td>
           </template>
         </tr>
       </template>
       </tbody>
     </table>
+    </div>
   </UCard>
 </template>
 

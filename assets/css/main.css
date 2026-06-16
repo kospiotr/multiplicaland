@@ -1,2 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "@nuxt/ui";
+
+@theme {
+  --font-sans: 'Fredoka', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Baloo 2', 'Fredoka', cursive;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
+}
+
+:root {
+  --play-bg-from: #e0f2fe;
+  --play-bg-via: #fae8ff;
+  --play-bg-to: #fef9c3;
+}
+
+.dark {
+  --play-bg-from: #1e1b4b;
+  --play-bg-via: #0f172a;
+  --play-bg-to: #172554;
+}
+
+html,
+body {
+  font-family: var(--font-sans);
+}
+
+/* Playful full-page background */
+.play-bg {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 15% 15%, color-mix(in srgb, var(--play-bg-via) 70%, transparent), transparent 45%),
+    radial-gradient(circle at 85% 25%, color-mix(in srgb, var(--play-bg-to) 65%, transparent), transparent 45%),
+    linear-gradient(160deg, var(--play-bg-from), var(--play-bg-via) 55%, var(--play-bg-to));
+  background-attachment: fixed;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* ---- Playful animations ---- */
+@keyframes pop-in {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.animate-pop-in { animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-4deg); }
+  75% { transform: rotate(4deg); }
+}
+.animate-wiggle { animation: wiggle 0.4s ease-in-out; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float { animation: float 3s ease-in-out infinite; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+.animate-shake { animation: shake 0.5s ease-in-out; }

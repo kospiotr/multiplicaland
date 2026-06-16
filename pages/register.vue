@@ -1,14 +1,15 @@
 <template>
-  <div class="flex flex-col">
-    <h1 class="p-8 space-y-4 m-auto h1">Register</h1>
-    <EmailPassword/>
+  <div class="mx-auto flex max-w-md flex-col items-center gap-6 px-4 py-10">
+    <div class="text-center">
+      <div class="text-5xl">🚀</div>
+      <h1 class="font-display text-3xl font-extrabold text-violet-600 dark:text-violet-300">Join the fun!</h1>
+    </div>
+    <UCard variant="subtle" class="w-full rounded-3xl">
+      <EmailPassword/>
+    </UCard>
   </div>
 </template>
 
-<style scoped>
-</style>
-
 <script setup lang="ts">
-
 import EmailPassword from "~/components/EmailPassword.vue";
 </script>
