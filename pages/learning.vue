@@ -51,6 +51,11 @@
           >✅</span>
           <span class="text-2xl">🎯</span>
           <span class="font-display text-lg font-extrabold text-slate-800 dark:text-white">{{ range[0] }}–{{ range[1] }}</span>
+          <span class="text-xs font-medium text-slate-500 dark:text-slate-300">{{ rangeQuestionCounts[i] }} questions</span>
+          <span
+              v-if="learningStore.getResult(mode.key, i)"
+              class="text-xs font-bold text-emerald-600 dark:text-emerald-300"
+          >Best {{ learningStore.getResult(mode.key, i)?.bestPercentage }}%</span>
         </button>
       </div>
     </section>
@@ -108,6 +113,22 @@ import {useLearningStore} from "~/store/learningStore";
 import {useGameProgressStore} from "~/store/progressStore";
 import {LEARNING_MODES, LEARNING_RANGES, LEARNING_TARGET, type LearningMode} from "~/store/learningConfig";
 import {IMPROVE_COUNT, IMPROVE_MODES, IMPROVE_TARGET, type ImproveModeInfo} from "~/store/improveConfig";
+import {findAvailableQuestions} from "~/store/gameSettingsStore";
+
+const rangeQuestionCounts = LEARNING_RANGES.map(range =>
+    new Set(findAvailableQuestions({
+      multiplicandRange: [1, 10],
+      multiplierRange: [1, 10],
+      productRange: [range[0], range[1]],
+      multiplicandVariable: false,
+      multiplierVariable: false,
+      productVariable: true,
+      questionsCount: 0,
+      timer: 0,
+      fosterFailed: 0,
+      fosterUnanswered: 0,
+    }).map(e => e.product)).size * LEARNING_TARGET
+);
 
 const currentGameStore = useCurrentGameStore()
 const learningStore = useLearningStore()
