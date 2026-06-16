@@ -61,7 +61,7 @@ function getAccuracy(multiplicand: number, multiplier: number) {
   }
 
   const correctAnswers = relevantAnswers.filter(answer => answer.status === 'correct').length;
-  return (correctAnswers / relevantAnswers.length) * 100;
+  return Math.floor((correctAnswers / relevantAnswers.length) * 100);
 }
 
 function getCellColor(multiplicand: number, multiplier: number): string {

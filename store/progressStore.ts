@@ -9,7 +9,15 @@ export const useGameProgressStore = defineStore('progress', () => {
         answers.value.push(answer)
     }
 
-    return {answers, submitAnswer}
+    function importAnswers(list: Answer[]) {
+        answers.value = list
+    }
+
+    function reset() {
+        answers.value = []
+    }
+
+    return {answers, submitAnswer, importAnswers, reset}
 }, {
     persist: {
         storage: piniaPluginPersistedstate.localStorage(),

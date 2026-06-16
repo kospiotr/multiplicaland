@@ -5,10 +5,11 @@ import {answerStats, correctAnswerProvider, placeholderQuestionTextProvider} fro
 import {useGameProgressStore} from "~/store/progressStore";
 import {findAvailableQuestions} from "~/store/gameSettingsStore";
 import {getLearningMode, LEARNING_TARGET, type LearningMode} from "~/store/learningConfig";
+import {IMPROVE_TARGET, type ImproveModeInfo} from "~/store/improveConfig";
 
 
 
-export type GameMode = 'quick' | 'custom' | 'adventure' | 'learning'
+export type GameMode = 'quick' | 'custom' | 'adventure' | 'learning' | 'improve'
 
 export const useCurrentGameStore = defineStore('current-game', () => {
     const settings = ref<GameSettingsSchema>()
@@ -63,6 +64,33 @@ export const useCurrentGameStore = defineStore('current-game', () => {
         learningRangeIndex.value = rangeIndex;
         learningModeKey.value = learnMode;
         learningEquations.value = findAvailableQuestions(setting);
+        availableProducts.value = [...new Set(learningEquations.value.map(e => e.product))].sort((a, b) => a - b);
+        answers.value = [];
+        currentQuestionIndex.value = 0;
+        const first = generateLearningQuestion();
+        questions.value = first ? [first] : [];
+    }
+
+    function createImproveGame(products: number[], modeInfo: ImproveModeInfo) {
+        const setting: GameSettingsSchema = {
+            multiplicandRange: [1, 10],
+            multiplierRange: [1, 10],
+            productRange: [1, 100],
+            multiplicandVariable: modeInfo.multiplicandVariable,
+            multiplierVariable: modeInfo.multiplierVariable,
+            productVariable: modeInfo.productVariable,
+            questionsCount: 0,
+            timer: modeInfo.timer,
+            fosterFailed: 0,
+            fosterUnanswered: 0,
+        }
+        settings.value = setting;
+        mode.value = 'improve';
+        adventureLevel.value = 0;
+        isLearning.value = true;
+        learningTarget.value = IMPROVE_TARGET;
+        const productSet = new Set(products);
+        learningEquations.value = findAvailableQuestions(setting).filter(e => productSet.has(e.product));
         availableProducts.value = [...new Set(learningEquations.value.map(e => e.product))].sort((a, b) => a - b);
         answers.value = [];
         currentQuestionIndex.value = 0;
@@ -204,6 +232,7 @@ export const useCurrentGameStore = defineStore('current-game', () => {
         isCompleted,
         isStarted,
         createLearningGame,
+        createImproveGame,
         isLearning,
         learningRange,
         learningRangeIndex,
