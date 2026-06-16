@@ -1,5 +1,11 @@
 <template>
-  <div class="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-6 sm:py-8">
+  <div v-if="currentGameStore.isStarted() && currentGameStore.isLearning"
+       class="mx-auto flex max-w-4xl flex-col items-center justify-center gap-6 px-4 py-6 sm:py-10">
+    <GameComponent v-if="!currentGameStore.isCompleted()"/>
+    <LearningComplete v-else :answers="currentGameStore.answers"/>
+  </div>
+
+  <div v-else class="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-6 sm:py-8">
     <div class="flex items-center justify-between gap-3">
       <h1 class="flex items-center gap-2 font-display text-3xl font-extrabold text-violet-600 dark:text-violet-300">
         <span>🎓</span> Learning
@@ -50,12 +56,10 @@ import {useCurrentGameStore} from "~/store/currentGameStore";
 import {useLearningStore} from "~/store/learningStore";
 import {LEARNING_MODES, LEARNING_RANGES, LEARNING_TARGET, type LearningMode} from "~/store/learningConfig";
 
-const router = useRouter()
 const currentGameStore = useCurrentGameStore()
 const learningStore = useLearningStore()
 
 function play(range: [number, number], mode: LearningMode, index: number) {
   currentGameStore.createLearningGame(range, mode, index)
-  router.push('/')
 }
 </script>

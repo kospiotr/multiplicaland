@@ -68,7 +68,7 @@ const isDark = computed({
       <!-- Custom game -->
       <button
           class="group flex items-center gap-4 rounded-3xl border-2 border-white/60 bg-white/80 p-5 text-left shadow-lg backdrop-blur-md transition-transform hover:scale-[1.03] active:scale-95 dark:border-white/10 dark:bg-slate-800/80"
-          @click="router.push('/settings')"
+          @click="router.push('/custom-game')"
       >
         <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-400 to-pink-600 text-3xl shadow-md">🎛️</span>
         <span class="min-w-0">

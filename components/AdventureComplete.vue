@@ -36,6 +36,11 @@ function replay() {
 function goNext() {
   if (nextLevel.value) playLevel(nextLevel.value.level)
 }
+
+function backToMap() {
+  currentGameStore.reset()
+  router.push('/adventure')
+}
 </script>
 
 <template>
@@ -48,7 +53,7 @@ function goNext() {
           size="xl"
           icon="i-lucide-map"
           class="rounded-full px-6 font-bold"
-          @click="router.push('/adventure')"
+          @click="backToMap"
       >
         Map
       </UButton>
@@ -79,7 +84,7 @@ function goNext() {
           size="xl"
           icon="i-lucide-crown"
           class="rounded-full px-6 font-bold shadow-lg"
-          @click="router.push('/adventure')"
+          @click="backToMap"
       >
         You won the adventure!
       </UButton>

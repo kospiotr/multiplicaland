@@ -9,14 +9,27 @@
 
 <script setup lang="ts">
 import {useCurrentGameStore} from "~/store/currentGameStore";
-import {useGameSettingsStore} from "~/store/gameSettingsStore";
+import {X_MAX, X_MIN, Y_MAX, Y_MIN} from "~/store/gameSettingsStore";
+import type {GameSettingsSchema} from "~/types";
 
 const router = useRouter()
-const settingsStore = useGameSettingsStore()
 const currentGameStore = useCurrentGameStore()
 
+const QUICK_GAME_SETTINGS: GameSettingsSchema = {
+  multiplicandRange: [X_MIN, X_MAX],
+  multiplierRange: [Y_MIN, Y_MAX],
+  productRange: [1, 100],
+  multiplicandVariable: false,
+  multiplierVariable: false,
+  productVariable: true,
+  questionsCount: 20,
+  timer: 0,
+  fosterFailed: 0,
+  fosterUnanswered: 0,
+}
+
 function start() {
-  currentGameStore.createNewGame(settingsStore.data, 'quick')
+  currentGameStore.createNewGame(QUICK_GAME_SETTINGS, 'quick')
 }
 
 function goHome() {

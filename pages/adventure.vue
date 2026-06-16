@@ -1,5 +1,15 @@
 <template>
-  <div class="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6 sm:py-8">
+  <div v-if="currentGameStore.isStarted() && currentGameStore.mode === 'adventure'"
+       class="mx-auto flex max-w-4xl flex-col items-center justify-center gap-6 px-4 py-6 sm:py-10">
+    <GameComponent v-if="!currentGameStore.isCompleted()"/>
+    <AdventureComplete
+        v-else
+        :answers="currentGameStore.answers"
+        :level="currentGameStore.adventureLevel"
+    />
+  </div>
+
+  <div v-else class="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6 sm:py-8">
     <div class="flex items-center justify-between gap-3">
       <h1 class="flex items-center gap-2 font-display text-3xl font-extrabold text-violet-600 dark:text-violet-300">
         <span>🗺️</span> Adventure
@@ -50,7 +60,6 @@ import {useCurrentGameStore} from "~/store/currentGameStore";
 import {useAdventureStore} from "~/store/adventureStore";
 import {ADVENTURE_LEVELS, getAdventureLevel} from "~/store/adventureLevels";
 
-const router = useRouter()
 const currentGameStore = useCurrentGameStore()
 const adventureStore = useAdventureStore()
 
@@ -58,6 +67,5 @@ function play(level: number) {
   const cfg = getAdventureLevel(level)
   if (!cfg) return
   currentGameStore.createNewGame(cfg.settings, 'adventure', level)
-  router.push('/')
 }
 </script>
