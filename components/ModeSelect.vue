@@ -8,6 +8,16 @@ const router = useRouter();
 const currentGameStore = useCurrentGameStore();
 const settingsStore = useGameSettingsStore();
 const adventureStore = useAdventureStore();
+const colorMode = useColorMode();
+
+const isDark = computed({
+  get() {
+    return colorMode.value === 'dark'
+  },
+  set() {
+    colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
+  }
+})
 
 function playQuick() {
   currentGameStore.createNewGame(settingsStore.data, 'quick');
@@ -25,6 +35,32 @@ function playQuick() {
     </div>
 
     <div class="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
+      <!-- Learning -->
+      <button
+          class="group flex items-center gap-4 rounded-3xl border-2 border-white/60 bg-white/80 p-5 text-left shadow-lg backdrop-blur-md transition-transform hover:scale-[1.03] active:scale-95 dark:border-white/10 dark:bg-slate-800/80"
+          @click="router.push('/learning')"
+      >
+        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 text-3xl shadow-md">🎓</span>
+        <span class="min-w-0">
+          <span class="block font-display text-xl font-extrabold text-slate-800 dark:text-white">Learning</span>
+          <span class="block text-sm font-medium text-slate-500 dark:text-slate-300">Master each result by repetition.</span>
+        </span>
+      </button>
+
+      <!-- Adventure -->
+      <button
+          class="group flex items-center gap-4 rounded-3xl border-2 border-white/60 bg-white/80 p-5 text-left shadow-lg backdrop-blur-md transition-transform hover:scale-[1.03] active:scale-95 dark:border-white/10 dark:bg-slate-800/80"
+          @click="router.push('/adventure')"
+      >
+        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-3xl shadow-md">🗺️</span>
+        <span class="min-w-0">
+          <span class="block font-display text-xl font-extrabold text-slate-800 dark:text-white">Adventure</span>
+          <span class="block text-sm font-medium text-slate-500 dark:text-slate-300">
+            {{ ADVENTURE_LEVELS.length }} levels • {{ adventureStore.totalStars }}/{{ adventureStore.maxStars }} ⭐
+          </span>
+        </span>
+      </button>
+
       <!-- Quick game -->
       <button
           class="group flex items-center gap-4 rounded-3xl border-2 border-white/60 bg-white/80 p-5 text-left shadow-lg backdrop-blur-md transition-transform hover:scale-[1.03] active:scale-95 dark:border-white/10 dark:bg-slate-800/80"
@@ -49,43 +85,29 @@ function playQuick() {
         </span>
       </button>
 
-      <!-- Adventure -->
-      <button
-          class="group flex items-center gap-4 rounded-3xl border-2 border-white/60 bg-white/80 p-5 text-left shadow-lg backdrop-blur-md transition-transform hover:scale-[1.03] active:scale-95 dark:border-white/10 dark:bg-slate-800/80"
-          @click="router.push('/adventure')"
-      >
-        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-3xl shadow-md">🗺️</span>
-        <span class="min-w-0">
-          <span class="block font-display text-xl font-extrabold text-slate-800 dark:text-white">Adventure</span>
-          <span class="block text-sm font-medium text-slate-500 dark:text-slate-300">
-            {{ ADVENTURE_LEVELS.length }} levels • {{ adventureStore.totalStars }}/{{ adventureStore.maxStars }} ⭐
-          </span>
-        </span>
-      </button>
+    </div>
 
-      <!-- Learning -->
-      <button
-          class="group flex items-center gap-4 rounded-3xl border-2 border-white/60 bg-white/80 p-5 text-left shadow-lg backdrop-blur-md transition-transform hover:scale-[1.03] active:scale-95 dark:border-white/10 dark:bg-slate-800/80"
-          @click="router.push('/learning')"
+    <!-- Secondary actions -->
+    <div class="flex w-full items-center justify-center gap-3">
+      <UButton
+          color="neutral"
+          variant="soft"
+          size="lg"
+          icon="i-lucide-bar-chart-3"
+          class="rounded-full px-6 font-bold"
+          @click="router.push('/statistics')"
       >
-        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 text-3xl shadow-md">🎓</span>
-        <span class="min-w-0">
-          <span class="block font-display text-xl font-extrabold text-slate-800 dark:text-white">Learning</span>
-          <span class="block text-sm font-medium text-slate-500 dark:text-slate-300">Master each result by repetition.</span>
-        </span>
-      </button>
-
-      <!-- Competition (coming soon) -->
-      <div
-          class="relative flex cursor-not-allowed items-center gap-4 rounded-3xl border-2 border-dashed border-slate-300 bg-white/50 p-5 text-left opacity-70 dark:border-slate-600 dark:bg-slate-800/50"
-      >
-        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-300 to-slate-400 text-3xl shadow-md">🏁</span>
-        <span class="min-w-0">
-          <span class="block font-display text-xl font-extrabold text-slate-600 dark:text-slate-200">Competition</span>
-          <span class="block text-sm font-medium text-slate-400 dark:text-slate-400">Race your friends — coming soon!</span>
-        </span>
-        <span class="absolute right-3 top-3 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-500 dark:bg-slate-700 dark:text-slate-300">Soon</span>
-      </div>
+        Statistics
+      </UButton>
+      <UButton
+          color="neutral"
+          variant="soft"
+          size="lg"
+          :icon="isDark ? 'i-lucide-sun' : 'i-lucide-moon'"
+          class="rounded-full transition-transform hover:scale-110 active:scale-95"
+          :aria-label="isDark ? 'Light mode' : 'Dark mode'"
+          @click="isDark = !isDark"
+      />
     </div>
   </div>
 </template>

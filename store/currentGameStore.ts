@@ -22,6 +22,7 @@ export const useCurrentGameStore = defineStore('current-game', () => {
     const isLearning = ref(false)
     const learningTarget = ref(LEARNING_TARGET)
     const learningRange = ref<[number, number]>([1, 100])
+    const learningRangeIndex = ref(0)
     const learningModeKey = ref<LearningMode>('basic')
     const availableProducts = ref<number[]>([])
     const learningEquations = ref<MultiplicationEquation[]>([])
@@ -39,7 +40,7 @@ export const useCurrentGameStore = defineStore('current-game', () => {
         console.log('created game', questions.value);
     }
 
-    function createLearningGame(range: [number, number], learnMode: LearningMode) {
+    function createLearningGame(range: [number, number], learnMode: LearningMode, rangeIndex = 0) {
         const info = getLearningMode(learnMode)
         const setting: GameSettingsSchema = {
             multiplicandRange: [1, 10],
@@ -59,6 +60,7 @@ export const useCurrentGameStore = defineStore('current-game', () => {
         isLearning.value = true;
         learningTarget.value = LEARNING_TARGET;
         learningRange.value = [range[0], range[1]];
+        learningRangeIndex.value = rangeIndex;
         learningModeKey.value = learnMode;
         learningEquations.value = findAvailableQuestions(setting);
         availableProducts.value = [...new Set(learningEquations.value.map(e => e.product))].sort((a, b) => a - b);
@@ -204,6 +206,7 @@ export const useCurrentGameStore = defineStore('current-game', () => {
         createLearningGame,
         isLearning,
         learningRange,
+        learningRangeIndex,
         learningModeKey,
         availableProducts,
         productCorrectCounts,
