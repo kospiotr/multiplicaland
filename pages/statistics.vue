@@ -4,6 +4,7 @@
       <span>📊</span> Statistics
     </h1>
     <UTabs v-model="activeTab" :content="false" :items="items" class="w-full"/>
+    <UTabs v-model="statusTab" :content="false" :items="statusItems" class="w-full"/>
     <AnswersSummary :answers="filteredAnswers"/>
 
     <div class="mt-2 flex flex-wrap items-center justify-center gap-3 border-t border-white/40 pt-6 dark:border-white/10">
@@ -53,19 +54,37 @@ const items: TabsItem[] = [
   {label: 'This Month'},
   {label: 'All'},
 ]
+const statusTab = ref('0');
+const statusItems: TabsItem[] = [
+  {label: 'All'},
+  {label: 'Correct'},
+  {label: 'Incorrect'},
+]
 const filteredAnswers = computed(() => {
   const now = new Date();
   return store.answers.filter(answer => {
     const answerDate = new Date(answer.finishedTs);
-    switch (activeTab.value) {
-      case '0':
-        return answerDate.toDateString() === now.toDateString();
+    const dateMatch = (() => {
+      switch (activeTab.value) {
+        case '0':
+          return answerDate.toDateString() === now.toDateString();
+        case '1':
+          const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+          return answerDate >= startOfWeek;
+        case '2':
+          return answerDate.getMonth() === now.getMonth() && answerDate.getFullYear() === now.getFullYear();
+        case '3':
+        default:
+          return true;
+      }
+    })();
+    if (!dateMatch) return false;
+    switch (statusTab.value) {
       case '1':
-        const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-        return answerDate >= startOfWeek;
+        return answer.status === 'correct';
       case '2':
-        return answerDate.getMonth() === now.getMonth() && answerDate.getFullYear() === now.getFullYear();
-      case '3':
+        return answer.status === 'incorrect';
+      case '0':
       default:
         return true;
     }
@@ -94,9 +113,12 @@ async function importData(event: Event) {
   try {
     const parsed = JSON.parse(await file.text());
     const answers = Array.isArray(parsed) ? parsed : parsed?.answers;
-    if (!Array.isArray(answers)) throw new Error('Invalid file');
-    store.importAnswers(answers as Answer[]);
-    toast.add({title: 'Imported', description: `${answers.length} answers loaded.`, color: 'success'});
+    if (Array.isArray(answers)) {
+      store.importAnswers(answers as Answer[]);
+      toast.add({title: 'Imported', description: `${answers.length} answers loaded.`, color: 'success'});
+    } else {
+      toast.add({title: 'Import failed', description: 'That file could not be read.', color: 'error'});
+    }
   } catch {
     toast.add({title: 'Import failed', description: 'That file could not be read.', color: 'error'});
   } finally {

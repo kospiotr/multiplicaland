@@ -1,7 +1,7 @@
 <template>
   <div class="play-bg">
     <VitePwaManifest/>
-    <header class="sticky top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-4">
+    <header v-if="route.path !== '/'" class="sticky top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-4">
       <nav
           class="mx-auto flex max-w-4xl items-center justify-center rounded-full border border-white/40 bg-white/70 px-3 py-2 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-slate-900/70 sm:px-4">
         <!-- Brand -->
@@ -24,6 +24,7 @@
 import {useCurrentGameStore} from "~/store/currentGameStore";
 
 const router = useRouter();
+const route = useRoute();
 
 function goToModeSelect() {
   useCurrentGameStore().reset();
