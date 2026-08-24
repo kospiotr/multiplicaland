@@ -1,4 +1,5 @@
 import type {GameSettingsSchema, MultiplicationEquation} from "~/types";
+import {getActiveProfileId} from "~/store/profileStore";
 
 
 export const X_MIN = 1;
@@ -63,6 +64,7 @@ export const useGameSettingsStore = defineStore('gameSettings', () => {
     return {data, store, availableQuestions}
 }, {
     persist: {
+        key: `gameSettings:${getActiveProfileId()}`,
         storage: piniaPluginPersistedstate.localStorage(),
     }
 })

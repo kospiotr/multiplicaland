@@ -1,5 +1,6 @@
 import {defineStore} from 'pinia';
 import {LEARNING_MODES, LEARNING_RANGES, type LearningMode} from "~/store/learningConfig";
+import {getActiveProfileId} from "~/store/profileStore";
 
 export interface LearningResult {
     completed: boolean;
@@ -42,6 +43,7 @@ export const useLearningStore = defineStore('learning', () => {
     return {results, getResult, isCompleted, completeLearning, completedCount, totalGames, resetProgress};
 }, {
     persist: {
+        key: `learning:${getActiveProfileId()}`,
         storage: piniaPluginPersistedstate.localStorage(),
     },
 });

@@ -6,6 +6,7 @@ import {useGameProgressStore} from "~/store/progressStore";
 import {findAvailableQuestions} from "~/store/gameSettingsStore";
 import {getLearningMode, LEARNING_TARGET, type LearningMode} from "~/store/learningConfig";
 import {IMPROVE_TARGET, type ImproveModeInfo} from "~/store/improveConfig";
+import {getActiveProfileId} from "~/store/profileStore";
 
 
 
@@ -243,6 +244,7 @@ export const useCurrentGameStore = defineStore('current-game', () => {
     }
 }, {
     persist: {
+        key: `current-game:${getActiveProfileId()}`,
         storage: piniaPluginPersistedstate.localStorage(),
     }
 })

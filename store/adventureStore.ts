@@ -1,5 +1,6 @@
 import {defineStore} from 'pinia';
 import {ADVENTURE_LEVELS, starsForPercentage} from "~/store/adventureLevels";
+import {getActiveProfileId} from "~/store/profileStore";
 
 export interface LevelResult {
     stars: number;
@@ -46,6 +47,7 @@ export const useAdventureStore = defineStore('adventure', () => {
     return {results, unlockedLevel, isUnlocked, getResult, completeLevel, totalStars, maxStars, resetProgress};
 }, {
     persist: {
+        key: `adventure:${getActiveProfileId()}`,
         storage: piniaPluginPersistedstate.localStorage(),
     },
 });

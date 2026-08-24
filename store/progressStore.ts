@@ -1,5 +1,6 @@
 import {defineStore} from 'pinia'
 import type {Answer} from "~/types";
+import {getActiveProfileId} from "~/store/profileStore";
 
 
 export const useGameProgressStore = defineStore('progress', () => {
@@ -20,6 +21,7 @@ export const useGameProgressStore = defineStore('progress', () => {
     return {answers, submitAnswer, importAnswers, reset}
 }, {
     persist: {
+        key: `progress:${getActiveProfileId()}`,
         storage: piniaPluginPersistedstate.localStorage(),
     }
 })

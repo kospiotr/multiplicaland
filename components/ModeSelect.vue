@@ -91,6 +91,7 @@ const isDark = computed({
       >
         Statistics
       </UButton>
+      <ProfileSwitcher/>
       <UButton
           color="neutral"
           variant="soft"
