@@ -6,11 +6,12 @@ import {useGameProgressStore} from "~/store/progressStore";
 import {findAvailableQuestions} from "~/store/gameSettingsStore";
 import {getLearningMode, LEARNING_TARGET, type LearningMode} from "~/store/learningConfig";
 import {IMPROVE_TARGET, type ImproveModeInfo} from "~/store/improveConfig";
+import {getTestLevel, TEST_TARGET} from "~/store/testLevels";
 import {getActiveProfileId} from "~/store/profileStore";
 
 
 
-export type GameMode = 'quick' | 'custom' | 'adventure' | 'learning' | 'improve'
+export type GameMode = 'quick' | 'custom' | 'adventure' | 'learning' | 'improve' | 'test'
 
 export const useCurrentGameStore = defineStore('current-game', () => {
     const settings = ref<GameSettingsSchema>()
@@ -19,6 +20,7 @@ export const useCurrentGameStore = defineStore('current-game', () => {
     const answers = ref<Answer[]>([])
     const mode = ref<GameMode>('quick')
     const adventureLevel = ref(0)
+    const testLevelIndex = ref(0)
 
     // Learning mode (mastery based): every result must be answered correctly N times.
     const isLearning = ref(false)
@@ -42,7 +44,7 @@ export const useCurrentGameStore = defineStore('current-game', () => {
         console.log('created game', questions.value);
     }
 
-    function createLearningGame(range: [number, number], learnMode: LearningMode, rangeIndex = 0) {
+    function createLearningGame(range: [number, number], learnMode: LearningMode, rangeIndex = 0, target = LEARNING_TARGET) {
         const info = getLearningMode(learnMode)
         const setting: GameSettingsSchema = {
             multiplicandRange: [1, 10],
@@ -60,7 +62,7 @@ export const useCurrentGameStore = defineStore('current-game', () => {
         mode.value = 'learning';
         adventureLevel.value = 0;
         isLearning.value = true;
-        learningTarget.value = LEARNING_TARGET;
+        learningTarget.value = target;
         learningRange.value = [range[0], range[1]];
         learningRangeIndex.value = rangeIndex;
         learningModeKey.value = learnMode;
@@ -70,6 +72,14 @@ export const useCurrentGameStore = defineStore('current-game', () => {
         currentQuestionIndex.value = 0;
         const first = generateLearningQuestion();
         questions.value = first ? [first] : [];
+    }
+
+    function createTestGame(levelIndex: number) {
+        const level = getTestLevel(levelIndex)
+        if (!level) return
+        createLearningGame(level.range, level.mode, level.rangeIndex, TEST_TARGET)
+        mode.value = 'test';
+        testLevelIndex.value = levelIndex;
     }
 
     function createImproveGame(products: number[], modeInfo: ImproveModeInfo) {
@@ -227,12 +237,14 @@ export const useCurrentGameStore = defineStore('current-game', () => {
         settings,
         mode,
         adventureLevel,
+        testLevelIndex,
         currentQuestionText,
         correctAnswer,
         nextQuestion,
         isCompleted,
         isStarted,
         createLearningGame,
+        createTestGame,
         createImproveGame,
         isLearning,
         learningRange,

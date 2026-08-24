@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import {useAdventureStore} from "~/store/adventureStore";
 import {ADVENTURE_LEVELS} from "~/store/adventureLevels";
+import {useTestStore} from "~/store/testStore";
+import {TEST_LEVELS} from "~/store/testLevels";
 
 const router = useRouter();
 const adventureStore = useAdventureStore();
+const testStore = useTestStore();
 const colorMode = useColorMode();
 
 const isDark = computed({
@@ -74,6 +77,20 @@ const isDark = computed({
         <span class="min-w-0">
           <span class="block font-display text-xl font-extrabold text-slate-800 dark:text-white">Custom Game</span>
           <span class="block text-sm font-medium text-slate-500 dark:text-slate-300">Choose your own rules, then play.</span>
+        </span>
+      </button>
+
+      <!-- Test -->
+      <button
+          class="group flex items-center gap-4 rounded-3xl border-2 border-white/60 bg-white/80 p-5 text-left shadow-lg backdrop-blur-md transition-transform hover:scale-[1.03] active:scale-95 dark:border-white/10 dark:bg-slate-800/80 sm:col-span-2 sm:mx-auto sm:w-full sm:max-w-[calc(50%-0.5rem)]"
+          @click="router.push('/test')"
+      >
+        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-3xl shadow-md">📝</span>
+        <span class="min-w-0">
+          <span class="block font-display text-xl font-extrabold text-slate-800 dark:text-white">Test</span>
+          <span class="block text-sm font-medium text-slate-500 dark:text-slate-300">
+            {{ TEST_LEVELS.length }} levels • {{ testStore.totalStars }}/{{ testStore.maxStars }} ⭐
+          </span>
         </span>
       </button>
 

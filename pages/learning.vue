@@ -25,38 +25,43 @@
       Each result must be answered correctly {{ LEARNING_TARGET }} times to be mastered — the game ends when you've mastered them all. Pick any range in any mode.
     </p>
 
-    <!-- One section per mode -->
-    <section v-for="mode in LEARNING_MODES" :key="mode.key" class="flex flex-col gap-3">
+    <!-- Matrix: difficulty per row, question type per column -->
+    <section class="flex flex-col gap-3">
       <div class="flex items-center gap-3">
-        <span class="text-3xl">{{ mode.emoji }}</span>
+        <span class="text-3xl">🎯</span>
         <div class="min-w-0">
-          <h2 class="font-display text-2xl font-extrabold text-slate-800 dark:text-white">{{ mode.title }}</h2>
-          <p class="text-sm font-medium text-slate-500 dark:text-slate-300">{{ mode.description }}</p>
+          <h2 class="font-display text-2xl font-extrabold text-slate-800 dark:text-white">Pick your challenge</h2>
+          <p class="text-sm font-medium text-slate-500 dark:text-slate-300">Same difficulty across, tougher question types as you move right.</p>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-        <button
-            v-for="(range, i) in LEARNING_RANGES"
-            :key="i"
-            class="relative flex flex-col items-center gap-1 rounded-3xl border-2 p-4 text-center shadow-md backdrop-blur-md transition-transform hover:scale-105 active:scale-95"
-            :class="learningStore.isCompleted(mode.key, i)
-              ? 'border-emerald-400 bg-emerald-50 dark:border-emerald-500/40 dark:bg-emerald-500/10'
-              : 'border-white/60 bg-white/85 dark:border-white/10 dark:bg-slate-800/85'"
-            @click="play(range, mode.key, i)"
-        >
-          <span
-              v-if="learningStore.isCompleted(mode.key, i)"
-              class="absolute right-2 top-2 text-lg"
-          >✅</span>
-          <span class="text-2xl">🎯</span>
-          <span class="font-display text-lg font-extrabold text-slate-800 dark:text-white">{{ range[0] }}–{{ range[1] }}</span>
-          <span class="text-xs font-medium text-slate-500 dark:text-slate-300">{{ rangeQuestionCounts[i] }} questions</span>
-          <span
-              v-if="learningStore.getResult(mode.key, i)"
-              class="text-xs font-bold text-emerald-600 dark:text-emerald-300"
-          >Best {{ learningStore.getResult(mode.key, i)?.bestPercentage }}%</span>
-        </button>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <template v-for="(range, i) in LEARNING_RANGES" :key="i">
+          <button
+              v-for="mode in LEARNING_MODES"
+              :key="mode.key + i"
+              class="relative flex flex-col items-center gap-1 rounded-2xl border-2 p-3 text-center shadow-sm backdrop-blur-md transition-transform hover:scale-105 active:scale-95"
+              :class="learningStore.isCompleted(mode.key, i)
+                ? 'border-emerald-400 bg-emerald-50 dark:border-emerald-500/40 dark:bg-emerald-500/10'
+                : 'border-white/60 bg-white/85 dark:border-white/10 dark:bg-slate-800/85'"
+              @click="play(range, mode.key, i)"
+          >
+            <span
+                v-if="learningStore.isCompleted(mode.key, i)"
+                class="absolute right-2 top-2 text-xs"
+            >✅</span>
+            <span class="font-display text-sm font-extrabold text-slate-800 dark:text-white">{{ range[0] }}–{{ range[1] }}</span>
+            <span class="text-[10px] font-medium text-slate-400">{{ rangeQuestionCounts[i] }} questions</span>
+            <span class="flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300">
+              <span>{{ mode.emoji }}</span> {{ mode.title }}
+            </span>
+            <span class="text-[10px] font-medium leading-tight text-slate-500 dark:text-slate-300">{{ mode.description }}</span>
+            <span
+                v-if="learningStore.getResult(mode.key, i)"
+                class="text-xs font-bold text-emerald-600 dark:text-emerald-300"
+            >Best {{ learningStore.getResult(mode.key, i)?.bestPercentage }}%</span>
+          </button>
+        </template>
       </div>
     </section>
 
@@ -72,7 +77,7 @@
         </div>
       </div>
 
-      <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap justify-center gap-2">
         <div
             v-for="p in worstProducts"
             :key="p.product"
