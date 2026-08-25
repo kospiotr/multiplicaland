@@ -8,9 +8,20 @@
     </template>
 
     <template v-else>
-      <h1 class="mb-5 flex items-center gap-2 font-display text-3xl font-extrabold text-violet-600 dark:text-violet-300">
-        <span>🎛️</span> Custom Game
-      </h1>
+      <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <h1 class="flex items-center gap-2 font-display text-3xl font-extrabold text-violet-600 dark:text-violet-300">
+          <span>🎛️</span> Custom Game
+        </h1>
+        <UButton
+            color="primary"
+            size="xl"
+            icon="i-lucide-play"
+            class="rounded-full px-10 py-3 text-lg font-bold shadow-xl transition-transform hover:scale-105 active:scale-95"
+            @click="startCustomGame"
+        >
+          Start game
+        </UButton>
+      </div>
       <UForm ref="form" :state="state" class="w-full flex flex-col gap-4" @submit="onSubmit">
         <UCard variant="subtle" class="rounded-3xl">
           <template #header>
@@ -101,7 +112,7 @@
 
       </UForm>
 
-      <div class="sticky bottom-4 mt-6 flex justify-center">
+      <div class="mt-6 flex justify-center">
         <UButton
             color="primary"
             size="xl"
